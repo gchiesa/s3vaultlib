@@ -1,0 +1,7 @@
+template test
+www.test.com
+port: 443
+
+certificate: 
+test
+
