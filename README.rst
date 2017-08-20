@@ -52,16 +52,16 @@ First of all we will have a KMS key with the name (nginx-key) for the role assoc
 
 Now we provision the secrets in the vault with the cli:
 
-* nginx configuration:
+* nginx configuration::
 
-s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_name -V www.example.com
-s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_port -V 8443
+    s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_name -V www.example.com
+    s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_port -V 8443
 
-* htpasswd upload:
+* htpasswd upload::
 
-s3vaultcli -b <bucket> -p vault/nginx push -s htpasswd -d htpasswd
+    s3vaultcli -b <bucket> -p vault/nginx push -s htpasswd -d htpasswd
 
-NOTE: the library will try to detect the role and use a KMS key with the same alias of the role name. If we are in another
+*NOTE:* the library will try to detect the role and use a KMS key with the same alias of the role name. If we are in another
 machine (or from our local machine we need to have access to the KMS key and specify the alias with the -k key_alias option)
 
 In S3 now, we will have a structure like this::
