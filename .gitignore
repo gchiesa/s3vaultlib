@@ -62,4 +62,5 @@ target/
 .python-version
 
 # pycharm
+.idea
 
