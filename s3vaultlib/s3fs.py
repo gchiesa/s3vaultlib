@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-
-"""Foobar.py: Description of what foobar does."""
 import logging
 import json
 import os
-from botocore.client import Config
+from .connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -21,19 +19,33 @@ MAX_S3_RETURNED_OBJECTS = 999
 class S3FsException(Exception):
     pass
 
+
 class S3Fs(object):
-    def __init__(self, connection_manager, bucket, path=''):
-        self._connmanager = connection_manager
-        """ :type : ConnectionManager """
+    """
+    Object that abstracts operation with encrypted objects on S3
+    """
+    def __init__(self, connection_factory, bucket, path=''):
+        """
+
+        :param connection_factory: connection_factory object
+        :type connection_factory: ConnectionFactory
+        :param bucket: S3 bucket
+        :param path: bucket path
+        """
+        self._connection_factory = connection_factory
+        """ :type : ConnectionFactory """
         self.logger = logging.getLogger(self.__class__.__name__)
         self._bucket = bucket
         self._path = path
         self._s3fs_objects = []
-        self.fs = self._connmanager.client('s3')
+        self.fs = self._connection_factory.client('s3')
         """ :type : pyboto3.s3 """
 
     @staticmethod
     def is_file(s3elem):
+        """
+        Return true is an s3 json element represents a valid file
+        """
         try:
             key = s3elem['Key']
         except KeyError:
@@ -45,9 +57,18 @@ class S3Fs(object):
 
     @property
     def objects(self):
+        """
+        Return a list of s3fsobjects
+        """
         return self._get_s3fsobjects()
 
     def _get_s3fsobjects(self, refresh=False):
+        """
+        load the s3fsobjects from an S3 path
+        :param refresh: True to reload the objects
+        :return: list of object
+        :rtype: list
+        """
         if self._s3fs_objects and not refresh:
             return self._s3fs_objects
         response = self.fs.list_objects_v2(Bucket=self._bucket,
@@ -63,12 +84,29 @@ class S3Fs(object):
         return self._s3fs_objects
 
     def get_object(self, name):
+        """
+        Return a s3fsobject identified by name
+        :param name: object name
+        :return: s3fsobject
+        :rtype: S3FsObject
+        """
         s3obj = next(iter([s3fsobj for s3fsobj in self.objects if s3fsobj.name == name]), None)
         if not s3obj:
             raise S3FsObjectException('Object not found')
         return s3obj
 
     def put_object(self, name, content, encryption_key_arn):
+        """
+        Put an object in the S3 path by encrypting it with SSE
+        :param name: object name
+        :param content: content of the object
+        :param encryption_key_arn: key arn to use for encryption
+        :return: the created s3object
+        :rtype: S3FsObject
+        """
+        if '.' in name:
+            raise ValueError('object does not support . (dot) in the name')
+
         self.logger.info('Adding object: {n}, size: {s}, to bucket: {b}, path: {p}'.format(n=name,
                                                                                            s=len(content),
                                                                                            b=self._bucket,
@@ -82,6 +120,13 @@ class S3Fs(object):
         return s3obj
 
     def update_s3fsobject(self, s3fsobject):
+        """
+        Update an S3FSObject
+        :param s3fsobject: S3FsObject to update
+        :type: S3FsObject
+        :return: the updated object
+        :rtype: S3FsObject
+        """
         if not s3fsobject.is_encrypted:
             raise S3FsException('Unable to update unencrypted object')
         return self.put_object(s3fsobject.name, str(s3fsobject), s3fsobject.kms_arn)
@@ -92,7 +137,17 @@ class S3FsObjectException(Exception):
 
 
 class S3FsObject(object):
+    """
+    Implement the S3FsObject, an abstraction around a S3 file with SSE encryption
+    """
     def __init__(self, data, bucket, path, fs):
+        """
+
+        :param data: json metadata from the file
+        :param bucket: bucket
+        :param path: path
+        :param fs: s3 cient
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
         self._data = data
         self._header = {}
@@ -108,19 +163,38 @@ class S3FsObject(object):
 
     @property
     def kms_arn(self):
+        """
+        Return the KMS ARN used to encrypt the object
+        :return: KMS ARN
+        :rtype: basestring
+        """
         return self._header.get('SSEKMSKeyId', '')
 
     @property
     def is_encrypted(self):
+        """
+        Return true if the object is encrypted
+        :return: True or False
+        :rtype: bool
+        """
         if self.kms_arn:
             return True
         return False
 
     @property
     def metadata(self):
+        """
+        Return the metadata associated with the object (file metadata)
+        :return: medatata
+        :rtype: dict
+        """
         return self._data
 
     def _load_content(self):
+        """
+        Load the content of the file pointed by S3FsObject
+        :return: content of the file
+        """
         object_path = os.path.join(self._path, self.name)
         try:
             self._header = self._fs.head_object(Bucket=self._bucket, Key=object_path)
@@ -136,6 +210,12 @@ class S3FsObject(object):
 
     @staticmethod
     def is_json(data):
+        """
+        Return True if the content is a valid json
+        :param data: content to evaluate
+        :return: True or False
+        :rtype: bool
+        """
         try:
             json.loads(data)
         except ValueError:
@@ -143,6 +223,11 @@ class S3FsObject(object):
         return True
 
     def __getitem__(self, item):
+        """
+        Overrides the getitem method
+        :param item:
+        :return:
+        """
         if not self._raw:
             self._load_content()
 
@@ -155,6 +240,12 @@ class S3FsObject(object):
         raise KeyError(item)
 
     def __setitem__(self, key, value):
+        """
+        Overrides the setitem method
+        :param key:
+        :param value:
+        :return:
+        """
         if not self._raw:
             self._load_content()
 
@@ -166,15 +257,21 @@ class S3FsObject(object):
         self._raw = json.dumps(json_data)
 
     def __getattr__(self, item):
+        """
+        Override the setattr method
+        :param item:
+        :return:
+        """
         try:
             return self.__getitem__(item)
         except KeyError:
             raise AttributeError(item)
 
-    # def __repr__(self):
-    #     return self.__str__()
-    #
     def __str__(self):
+        """
+        Override the str method
+        :return:
+        """
         if not self._raw:
             self._load_content()
         return self._raw

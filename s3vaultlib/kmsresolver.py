@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-"""Foobar.py: Description of what foobar does."""
 from .ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
@@ -17,6 +15,10 @@ class KMSResolverException(Exception):
 
 
 class KMSResolver(object):
+    """
+    Object that resolves the KMS key associated to a role, or
+    load a keyarn with a specified alias
+    """
     def __init__(self, connection_manager, keyalias='', role_name=''):
         self._connmanager = connection_manager
         """ :type : ConnectionManager """
@@ -33,6 +35,11 @@ class KMSResolver(object):
         return key_data['KeyMetadata'].get('Arn')
 
     def retrieve_key_arn(self):
+        """
+        Return the KMS arn of a key
+        :return: key arn
+        :rtype: basestring
+        """
         key_arn = ''
         if self._keyalias:
             key_arn = self._get_key_from_alias(self._keyalias)

@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-
-"""Foobar.py: Description of what foobar does."""
 import sys
 import jinja2
 import logging
 import argparse
-from .connectionmanager import ConnectionManager
-from .s3fs import S3Fs, S3FsObjectException
+from .connectionfactory import ConnectionFactory
+from .s3fs import S3Fs, S3FsObjectException, S3FsObject
 from .kmsresolver import KMSResolver
 from botocore.client import Config
 from . import __version__
@@ -21,12 +19,27 @@ __status__ = "PerpetualBeta"
 
 
 class TemplateRenderer(object):
+    """
+    Renders a template based on S3Fs location
+    """
     def __init__(self, template_file, s3fs):
+        """
+
+        :param template_file: template file to process
+        :param s3fs: S3Fs object
+        :type s3fs: S3Fs
+        """
         self._template_file = template_file
         self._s3fs = s3fs
         """ :type : S3Fs """
 
     def render(self, **kwargs):
+        """
+        Renders the template
+        :param kwargs: additional variables to use in the rendering
+        :return: content of the rendered template
+        :rtype: basestring
+        """
         with open(self._template_file, 'rb') as tpl_file:
             tpl_data = tpl_file.read()
         template = jinja2.Template(tpl_data)
@@ -36,15 +49,35 @@ class TemplateRenderer(object):
 
 
 class S3Vault(object):
-    def __init__(self, bucket, path, connection_manager=None):
+    """
+    Implements a Vault by using S3 as backend and KMS as way to protect the data
+    """
+    def __init__(self, bucket, path, connection_factory=None):
+        """
+
+        :param bucket: bucket
+        :param path: path
+        :param connection_factory: connection factory
+        :type connection_factory: ConnectionFactory
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
         self._bucket = bucket
         self._path = path
-        self._connection_manager = connection_manager
+        self._connection_manager = connection_factory
         if not self._connection_manager:
-            self._connection_manager = ConnectionManager(config=Config(signature_version='s3v4'))
+            self._connection_manager = ConnectionFactory(config=Config(signature_version='s3v4'))
 
     def put_file(self, src, dest, encryption_key_arn='', key_alias='', role_name=''):
+        """
+        Upload a file to the S3Vault
+        :param src: source file name
+        :param dest: destination file name
+        :param encryption_key_arn: KMS Key arn to use
+        :param key_alias: KMS Key alias to use
+        :param role_name: Role from which resolve the key
+        :return: metadata of the uploaded object
+        :rtype: dict
+        """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         kms_resolver = KMSResolver(self._connection_manager, keyalias=key_alias, role_name=role_name)
         key_arn = encryption_key_arn
@@ -56,16 +89,39 @@ class S3Vault(object):
         return s3fsobj.metadata
 
     def get_file(self, name):
+        """
+        Get a file from S3Vault
+        :param name: filename
+        :return: file content
+        :rtype: basestring
+        """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         s3fsobject = s3fs.get_object(name)
         return str(s3fsobject)
 
     def render_template(self, template_file, **kwargs):
+        """
+        Renders a template file using the information available in the S3Vault
+        :param template_file: file name to use as template
+        :param kwargs: additional variables to use in the rendering
+        :return: rendered content
+        :rtype: basestring
+        """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         template_renderer = TemplateRenderer(template_file, s3fs)
         return template_renderer.render()
 
     def create_config_property(self, configfile, encryption_key_arn='', key_alias='', role_name=''):
+        """
+        Create a configuration file in the S3Vault
+
+        :param configfile: configuration file name
+        :param encryption_key_arn: KMS Arn to use
+        :param key_alias: KMS Alias to use
+        :param role_name: Role to use to resolve the KMS Key
+        :return: s3fsobject
+        :rtype: S3FsObject
+        """
         self.logger.info('Creating new config file: {c}'.format(c=configfile))
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         kms_resolver = KMSResolver(self._connection_manager, keyalias=key_alias, role_name=role_name)
@@ -76,6 +132,18 @@ class S3Vault(object):
         return s3fsobject
 
     def set_property(self, configfile, key, value, encryption_key_arn='', key_alias='', role_name=''):
+        """
+        Set a property in a configuration file in the S3Vault
+
+        :param configfile: configfile name
+        :param key: key
+        :param value: value
+        :param encryption_key_arn: KMS Key to use
+        :param key_alias: KMS alias to use
+        :param role_name: Role to use to resolve the KMS Key
+        :return: metadata of the config file created/updated
+        :rtype: basestring
+        """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         try:
             s3fsobject = s3fs.get_object(configfile)
@@ -86,6 +154,12 @@ class S3Vault(object):
         return s3fsobj.metadata
 
     def get_property(self, configfile, key):
+        """
+        Get a configuration property from a config file from the S3Vault
+        :param configfile: configuration file
+        :param key: key to query
+        :return: value of the key
+        """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         try:
             s3fsobject = s3fs.get_object(configfile)
@@ -96,6 +170,10 @@ class S3Vault(object):
 
 
 def check_args():
+    """
+    Check the args from the command line
+    :return: args object
+    """
     parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli', version=__version__)
     parser.add_argument('-b', '--bucket', dest='bucket', required=True,
                         help='Bucket to use for S3Vault')
@@ -139,21 +217,31 @@ def check_args():
 
 
 def configure_logging(level):
-    formatter = '[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]'
+    """
+    Configure the logging level of the tool
+    :param level: level to set
+    :return:
+    """
+    formatter = '[%(name)s] [%(levelname)s] : %(message)s'
+    # formatter = '[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]'
     logging.basicConfig(level=logging.getLevelName(level.upper()),
                         format=formatter)
 
 
 def main():
+    """
+    Command line tool to use some functionality of the S3Vault
+    :return:
+    """
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger(__name__)
 
     conn_manager = None
     if args.profile:
-        conn_manager = ConnectionManager(region=args.region, profile=args.profile)
+        conn_manager = ConnectionFactory(region=args.region, profile=args.profile)
 
-    s3vault = S3Vault(args.bucket, args.path, connection_manager=conn_manager)
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
 
     if args.command == 'template':
         try:
