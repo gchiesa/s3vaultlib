@@ -7,14 +7,14 @@ S3Vault Library
         :target: https://pypi.python.org/pypi/s3vaultlib
 
 .. image:: https://img.shields.io/travis/s3vaultlib/s3vaultlib.svg
-        :target: https://travis-ci.org/s3vaultlib/s3vaultlib
+        :target: https://travis-ci.org/s3vaultlib
 
 .. image:: https://readthedocs.org/projects/s3vaultlib/badge/?version=latest
         :target: https://s3vaultlib.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/s3vaultlib/s3vaultlib/shield.svg
-     :target: https://pyup.io/repos/github/s3vaultlib/s3vaultlib/
+     :target: https://pyup.io/repos/github/s3vaultlib
      :alt: Updates
 
 
