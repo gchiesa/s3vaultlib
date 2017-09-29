@@ -31,7 +31,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author="Giuseppe Chiesa",
     author_email='mail@giuseppechiesa.it',
-    url='https://github.com/s3vaultlib/s3vaultlib',
+    url='https://github.com/gchiesa/s3vaultlib',
     packages=find_packages(include=['s3vaultlib']),
     include_package_data=True,
     install_requires=requirements,
