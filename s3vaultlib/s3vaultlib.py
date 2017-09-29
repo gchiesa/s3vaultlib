@@ -239,7 +239,7 @@ def main():
 
     conn_manager = None
     if args.profile:
-        conn_manager = ConnectionFactory(region=args.region, profile=args.profile)
+        conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
     else:
         conn_manager = ConnectionFactory(region=args.region)
 
