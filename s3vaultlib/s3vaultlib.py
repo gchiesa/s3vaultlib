@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import sys
+import os
 import jinja2
 import logging
 import argparse
+import copy
 from .connectionfactory import ConnectionFactory
 from .s3fs import S3Fs, S3FsObjectException, S3FsObject
 from .kmsresolver import KMSResolver
@@ -44,6 +46,7 @@ class TemplateRenderer(object):
             tpl_data = tpl_file.read()
         template = jinja2.Template(tpl_data)
         variables = {obj.name: obj for obj in self._s3fs.objects}
+        variables.update(kwargs)
         result = template.render(**variables)
         return result
 
@@ -109,7 +112,7 @@ class S3Vault(object):
         """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         template_renderer = TemplateRenderer(template_file, s3fs)
-        return template_renderer.render()
+        return template_renderer.render(kwargs)
 
     def create_config_property(self, configfile, encryption_key_arn='', key_alias='', role_name=''):
         """
@@ -247,7 +250,12 @@ def main():
 
     if args.command == 'template':
         try:
-            args.dest.write(s3vault.render_template(args.template.name))
+            # expose the environemnt variables in 2 dicts
+            ansible_env = copy.deepcopy(os.environ)
+            environment = copy.deepcopy(os.environ)
+            args.dest.write(s3vault.render_template(args.template.name,
+                                                    ansible_env=ansible_env,
+                                                    environment=environment))
         except Exception as e:
             logger.exception('Error while expanding the template. Exiting')
             sys.exit(1)
