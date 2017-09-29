@@ -240,6 +240,8 @@ def main():
     conn_manager = None
     if args.profile:
         conn_manager = ConnectionFactory(region=args.region, profile=args.profile)
+    else:
+        conn_manager = ConnectionFactory(region=args.region)
 
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
 
