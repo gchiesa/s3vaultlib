@@ -2,10 +2,13 @@
 import jinja2
 import os
 import copy
+import logging
 from ansible.module_utils.basic import AnsibleModule
-from s3vaultlib.ec2metadata import EC2Metadata
+from s3vaultlib.ec2metadata import EC2Metadata, EC2MetadataException
 from s3vaultlib.connectionfactory import ConnectionFactory
 from s3vaultlib.s3vaultlib import S3Vault
+
+logging.basicConfig(level=logging.DEBUG)
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -95,10 +98,11 @@ def run_module():
         bucket=dict(type='str', required=True),
         path=dict(type='str', required=False, default='role/{{ role_name }}/encrypted'),
         kms_alias=dict(type='str', required=False),
-        region=dict(type='str', required=True, default=None),
+        region=dict(type='str', required=False, default=None),
         profile=dict(type='str', required=False, default=None),
         src=dict(type='str', required=True),
         dest=dict(type='str', required=True),
+        ec2=dict(type='bool', required=False, default=True)
     )
 
     # seed the result dict in the object
@@ -128,17 +132,20 @@ def run_module():
         return result
 
     # get the role
-    ec2_metadata = EC2Metadata()
-    template = jinja2.Template(module.params['path'])
-    vault_path = template.render({'role_name': ec2_metadata.role})
+    if module.params['ec2']:
+        ec2_metadata = EC2Metadata()
+        template = jinja2.Template(module.params['path'])
+        vault_path = template.render({'role_name': ec2_metadata.role})
+    else:
+        vault_path = module.params['path']
 
-    conn_manager = ConnectionFactory(region=module.params['region'], profile=module.params['profile'])
+    conn_manager = ConnectionFactory(region=module.params['region'], profile_name=module.params['profile'])
     s3vault = S3Vault(module.params['bucket'], vault_path, connection_factory=conn_manager)
 
     ansible_env = copy.deepcopy(os.environ)
     environment = copy.deepcopy(os.environ)
 
-    if not os.access(module.params['dest'], os.W_OK):
+    if not os.access(os.path.dirname(module.params['dest']), os.W_OK):
         module.fail_json(msg='Unable to write the destination file', **result)
 
     if not os.access(module.params['src'], os.R_OK):
