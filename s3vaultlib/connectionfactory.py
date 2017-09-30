@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import boto3
+from ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -26,6 +27,9 @@ class ConnectionFactory(object):
     def _connection(self, type=None, resource=None):
         """Allocate a connection"""
         profile = self._params.pop('profile_name', None)
+
+        if not self._region:
+            self._region = EC2Metadata().region
 
         if type not in ['both', 'resource', 'client']:
             raise ValueError('connection: {c} not supported'.format(c=type))

@@ -23,6 +23,7 @@ class EC2Metadata(object):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._endpoint = endpoint
         self._version = version
+        self._instance_identity_document = None
         self._uri = 'http://{e}/{v}'.format(e=endpoint, v=version)
 
     def _get_data(self, url_path):
@@ -48,3 +49,38 @@ class EC2Metadata(object):
         if not data:
             raise EC2MetadataException('Role not associated')
         return data
+
+    @property
+    def account_id(self):
+        """
+        Return the account_id associated to the instance
+        :return: account_id
+        :rtype: basestring
+        """
+        return self._get_instance_identity_document()['accountId']
+
+    @property
+    def region(self):
+        """
+        Return the region associated to the instance
+        :return: region
+        :rtype: basestring
+        """
+        return self._get_instance_identity_document()['availabilityZone'][-1]
+
+    @property
+    def instance_id(self):
+        """
+        Return the instance_id associated to the instance
+        :return: instance_id
+        :rtype: basestring
+        """
+        return self._get_instance_identity_document()['instanceId']
+
+    def _get_instance_identity_document(self):
+        if not self._instance_identity_document:
+            data = self._get_data('latest/dynamic/instance-identity/document')
+            if not data:
+                raise EC2MetadataException('Unable to retrieve instance identity document')
+            self._instance_identity_document = data
+        return self._instance_identity_document
