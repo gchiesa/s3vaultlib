@@ -145,7 +145,8 @@ def run_module():
     ansible_env = copy.deepcopy(os.environ)
     environment = copy.deepcopy(os.environ)
 
-    if not os.access(os.path.dirname(module.params['dest']), os.W_OK):
+    dest_path = os.path.dirname(os.path.abspath(module.params['dest']))
+    if not os.access(dest_path, os.W_OK):
         module.fail_json(msg='Unable to write the destination file', **result)
 
     if not os.access(module.params['src'], os.R_OK):
