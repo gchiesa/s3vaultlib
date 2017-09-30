@@ -1,0 +1,15 @@
+---
+- name: test my new module
+  connection: local
+  hosts: localhost
+  tasks:
+    - name: test
+      s3vault_template:
+        bucket: 230706054651
+        path: vault/nginx/
+        kms_alias: gchiesa/testkey
+        src: template.j2
+        dest: outcome.txt
+        ec2: false
+        region: eu-west-1
+

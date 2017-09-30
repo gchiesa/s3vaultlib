@@ -1,0 +1,16 @@
+template test
+{{ nginx.server_name }}
+port: {{ nginx.port }}
+
+certificate:
+{{ cert }}
+
+htpasswd:
+{{ htpasswd }}
+
+environment:
+{{ ansible_env.PYENV_SHELL }}
+
+environment2:
+{{ environment['LOGNAME'] }}
+

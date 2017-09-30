@@ -42,6 +42,47 @@ blob store in jinja templates while you are provisioning your instance.
 
 S3Vaultlib comes also with a simple cli, s3vaultcli that help to automate some simple tasks.
 
+Ansible Module
+--------------
+The library includes also a useful ansible module that allows you to easily create files from templates.
+Check the following example:
+
+template j2::
+
+    template test
+    {{ nginx.server_name }}
+    port: {{ nginx.port }}
+    certificate:
+    {{ cert }}
+    htpasswd:
+    {{ htpasswd }}
+    environment:
+    {{ ansible_env.PYENV_SHELL }}
+    environment2:
+    {{ environment['LOGNAME'] }}
+
+playbook::
+
+    ---
+    - name: test my new module
+      connection: local
+      hosts: localhost
+      tasks:
+        - name: test
+          s3vault_template:
+            bucket: 230706054651
+            path: vault/nginx/
+            kms_alias: gchiesa/testkey
+            src: template.j2
+            dest: outcome.txt
+            ec2: false
+            region: eu-west-1
+
+
+
+This way the s3vault_template module will take the template, connect to S3, expose the filesystem as variables and you
+use the files in your template
+
 
 Example Use Case
 ----------------

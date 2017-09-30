@@ -1,0 +1,12 @@
+{
+    "ANSIBLE_MODULE_ARGS": {
+        "bucket": "230706054651",
+        "path": "vault/nginx/",
+        "kms_alias": "gchiesa/testkey",
+        "src": "template.j2",
+        "dest": "/tmp/outcome.txt",
+        "profile": "default",
+        "ec2": "false",
+        "region": "eu-west-1"
+    }
+}
