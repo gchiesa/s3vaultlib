@@ -218,6 +218,8 @@ def check_args():
                              help='Key to set')
     setproperty.add_argument('-V', '--value', dest='value', required=True,
                              help='Value to set')
+    ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
+
     return parser.parse_args()
 
 
@@ -277,6 +279,9 @@ def main():
         except Exception as e:
             logger.exception('Error while setting property. Error: {t} / {e}'.format(t=str(type(e)),
                                                                                      e=str(e)))
+    elif args.command == 'ansible_path':
+            dirname = os.path.dirname(os.path.abspath(__file__))
+            print('{}'.format(os.path.join(dirname, 'ansible')))
     else:
         logger.error('Command not available')
         sys.exit(1)
