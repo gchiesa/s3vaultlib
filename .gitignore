@@ -63,3 +63,6 @@ target/
 
 # pycharm
 .idea
+
+# ansible test files
+ansible_test/
