@@ -112,7 +112,7 @@ class S3Vault(object):
         """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         template_renderer = TemplateRenderer(template_file, s3fs)
-        return template_renderer.render(kwargs)
+        return template_renderer.render(**kwargs)
 
     def create_config_property(self, configfile, encryption_key_arn='', key_alias='', role_name=''):
         """
@@ -189,9 +189,11 @@ def check_args():
                         choices=['debug', 'info', 'warning', 'error'],
                         default='info')
     parser.add_argument('--profile', dest='profile', required=False,
-                        help='AWS profile to use')
+                        help='AWS profile to use',
+                        default=None)
     parser.add_argument('--region', dest='region', required=False,
-                        help='AWS region to use')
+                        help='AWS region to use',
+                        default=None)
 
     subparsers = parser.add_subparsers(dest='command')
     template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault')
@@ -239,12 +241,7 @@ def main():
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger(__name__)
-
-    conn_manager = None
-    if args.profile:
-        conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
-    else:
-        conn_manager = ConnectionFactory(region=args.region)
+    conn_manager = ConnectionFactory(region=args.region, profile=args.profile)
 
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
 
