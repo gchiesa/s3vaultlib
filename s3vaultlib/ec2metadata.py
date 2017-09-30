@@ -32,7 +32,7 @@ class EC2Metadata(object):
         """
         url = '{b}/{p}'.format(b=self._uri, p=url_path)
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=5)
         except Exception:
             self.logger.exception('Error while getting metadata')
             raise
