@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import boto3
+import logging
 from .ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
@@ -16,6 +17,7 @@ class ConnectionFactory(object):
     Object that allocate connection by supporting also connection profile and extended paramaters
     """
     def __init__(self, region=None, endpoint=None, **params):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self._region = region
         self._endpoint = endpoint
         self._params = params
@@ -27,7 +29,6 @@ class ConnectionFactory(object):
     def _connection(self, type=None, resource=None):
         """Allocate a connection"""
         profile = self._params.pop('profile_name', None)
-
         if not self._region:
             self._region = EC2Metadata().region
 
