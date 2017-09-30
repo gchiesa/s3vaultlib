@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import boto3
-from ec2metadata import EC2Metadata
+from .ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
