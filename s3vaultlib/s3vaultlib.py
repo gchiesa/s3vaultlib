@@ -32,6 +32,7 @@ class TemplateRenderer(object):
         :type s3fs: S3Fs
         """
         self._template_file = template_file
+        self._jinja2 = jinja2.Environment(trim_blocks=False)
         self._s3fs = s3fs
         """ :type : S3Fs """
 
@@ -44,7 +45,7 @@ class TemplateRenderer(object):
         """
         with open(self._template_file, 'rb') as tpl_file:
             tpl_data = tpl_file.read()
-        template = jinja2.Template(tpl_data)
+        template = self._jinja2.from_string(tpl_data)
         variables = {obj.name: obj for obj in self._s3fs.objects}
         variables.update(kwargs)
         result = template.render(**variables)
