@@ -243,7 +243,7 @@ def main():
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger(__name__)
-    conn_manager = ConnectionFactory(region=args.region, profile=args.profile)
+    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
 
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
 
