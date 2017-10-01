@@ -26,7 +26,7 @@ test_requirements = [
 
 setup(
     name='s3vaultlib',
-    version='1.0.0',
+    version='1.1.0',
     description="Python library to expose S3 as vault to store encrypted data",
     long_description=readme + '\n\n' + history,
     author="Giuseppe Chiesa",
