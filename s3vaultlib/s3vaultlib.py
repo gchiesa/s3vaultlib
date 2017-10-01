@@ -32,7 +32,7 @@ class TemplateRenderer(object):
         :type s3fs: S3Fs
         """
         self._template_file = template_file
-        self._jinja2 = jinja2.Environment(trim_blocks=False)
+        self._jinja2 = jinja2.Environment(trim_blocks=True)
         self._s3fs = s3fs
         """ :type : S3Fs """
 
