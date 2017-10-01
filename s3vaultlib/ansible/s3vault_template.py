@@ -66,7 +66,7 @@ options:
     mode: 
         description: 
             - Mode (numeric) to associate to the created destination file (default 0666)             
-    user: 
+    owner: 
         description: 
             - User to associate to the created destination file             
     group: 
@@ -114,7 +114,7 @@ def run_module():
         src=dict(type='str', required=True),
         dest=dict(type='str', required=True),
         mode=dict(type='str', required=False, default='0666'),
-        user=dict(type='str', required=False, default='root'),
+        owner=dict(type='str', required=False, default='root'),
         group=dict(type='str', required=False, default='root'),
         ec2=dict(type='bool', required=False, default=True)
     )
@@ -175,7 +175,7 @@ def run_module():
 
     # resolve user and group
     group_id = getgrnam(module.params['group']).gr_gid
-    user_id = getpwnam(module.params['user'].pw_uid)
+    user_id = getpwnam(module.params['owner'].pw_uid)
     os.chown(module.params['dest'], user_id, group_id)
 
     result['changed'] = True
