@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import requests
 import logging
+import json
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -66,9 +67,7 @@ class EC2Metadata(object):
         :return: region
         :rtype: basestring
         """
-        data = self._get_instance_identity_document()
-        region = data['availabilityZone'][:-1]
-        return region
+        return self._get_instance_identity_document()['availabilityZone'][:-1]
 
     @property
     def instance_id(self):
@@ -84,5 +83,5 @@ class EC2Metadata(object):
             data = self._get_data('dynamic/instance-identity/document')
             if not data:
                 raise EC2MetadataException('Unable to retrieve instance identity document')
-            self._instance_identity_document = data
+            self._instance_identity_document = json.loads(data)
         return self._instance_identity_document
