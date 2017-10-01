@@ -178,8 +178,8 @@ def run_module():
     module.set_group_if_different(dest_file, module.params['group'], result['changed'])
 
     result['changed'] = True
-    result['message'] = 'Template: {src} expanded to: {dest}'.format(src=module.params['src'],
-                                                                     dest=module.params['dest'])
+    result['message'] = 'Template: {src} expanded to: {dest}'.format(src=src_file,
+                                                                     dest=dest_file)
     module.exit_json(**result)
 
 
