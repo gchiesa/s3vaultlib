@@ -165,7 +165,7 @@ def run_module():
     if not os.access(dest_path, os.W_OK):
         module.fail_json(msg='Unable to write the destination file', **result)
 
-    if not os.access(module.params['src'], os.R_OK):
+    if not os.access(src_file, os.R_OK):
         module.fail_json(msg='Unable to read from the source file', **result)
 
     with open(dest_file, 'wb') as f_handler:
