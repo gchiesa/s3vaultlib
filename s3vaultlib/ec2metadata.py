@@ -66,7 +66,9 @@ class EC2Metadata(object):
         :return: region
         :rtype: basestring
         """
-        return self._get_instance_identity_document()['availabilityZone'][-1]
+        data = self._get_instance_identity_document()
+        region = data['availabilityZone'][:-1]
+        return region
 
     @property
     def instance_id(self):
