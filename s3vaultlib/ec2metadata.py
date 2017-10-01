@@ -79,7 +79,7 @@ class EC2Metadata(object):
 
     def _get_instance_identity_document(self):
         if not self._instance_identity_document:
-            data = self._get_data('latest/dynamic/instance-identity/document')
+            data = self._get_data('dynamic/instance-identity/document')
             if not data:
                 raise EC2MetadataException('Unable to retrieve instance identity document')
             self._instance_identity_document = data
