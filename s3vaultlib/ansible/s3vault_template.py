@@ -3,6 +3,8 @@ import jinja2
 import os
 import copy
 import logging
+from pwd import getpwnam
+from grp import getgrnam
 from ansible.module_utils.basic import AnsibleModule
 from s3vaultlib.ec2metadata import EC2Metadata, EC2MetadataException
 from s3vaultlib.connectionfactory import ConnectionFactory
@@ -61,6 +63,15 @@ options:
     profile: 
         description: 
             - Profile to use            
+    mode: 
+        description: 
+            - Mode (numeric) to associate to the created destination file (default 0666)             
+    user: 
+        description: 
+            - User to associate to the created destination file             
+    group: 
+        description: 
+            - Group to associate to the created destination file               
     src:        
         description: 
             - The source template to expand
@@ -102,6 +113,9 @@ def run_module():
         profile=dict(type='str', required=False, default=None),
         src=dict(type='str', required=True),
         dest=dict(type='str', required=True),
+        mode=dict(type='str', required=False, default='0666'),
+        user=dict(type='str', required=False, default='root'),
+        group=dict(type='str', required=False, default='root'),
         ec2=dict(type='bool', required=False, default=True)
     )
 
@@ -156,6 +170,13 @@ def run_module():
         f_handler.write(s3vault.render_template(module.params['src'],
                                                 ansible_env=ansible_env,
                                                 environment=environment))
+
+    os.chmod(module.params['dest'], module.params['mode'])
+
+    # resolve user and group
+    group_id = getgrnam(module.params['group']).gr_gid
+    user_id = getpwnam(module.params['user'].pw_uid)
+    os.chown(module.params['dest'], user_id, group_id)
 
     result['changed'] = True
     result['message'] = 'Template: {src} expanded to: {dest}'.format(src=module.params['src'],
