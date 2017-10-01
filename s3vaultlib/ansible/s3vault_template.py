@@ -160,23 +160,22 @@ def run_module():
     environment = copy.deepcopy(os.environ)
 
     dest_path = os.path.dirname(os.path.abspath(module.params['dest']))
+    dest_file = os.path.abspath(module.params['dest'])
+    src_file = os.path.abspath(module.params['src'])
     if not os.access(dest_path, os.W_OK):
         module.fail_json(msg='Unable to write the destination file', **result)
 
     if not os.access(module.params['src'], os.R_OK):
         module.fail_json(msg='Unable to read from the source file', **result)
 
-    with open(module.params['dest'], 'wb') as f_handler:
-        f_handler.write(s3vault.render_template(module.params['src'],
+    with open(dest_file, 'wb') as f_handler:
+        f_handler.write(s3vault.render_template(src_file,
                                                 ansible_env=ansible_env,
                                                 environment=environment))
 
-    os.chmod(module.params['dest'], module.params['mode'])
-
-    # resolve user and group
-    group_id = getgrnam(module.params['group']).gr_gid
-    user_id = getpwnam(module.params['owner'].pw_uid)
-    os.chown(module.params['dest'], user_id, group_id)
+    module.set_mode_if_different(dest_file, module.params['mode'], result['changed'])
+    module.set_owner_if_different(dest_file, module.params['owner'], result['changed'])
+    module.set_group_if_different(dest_file, module.params['group'], result['changed'])
 
     result['changed'] = True
     result['message'] = 'Template: {src} expanded to: {dest}'.format(src=module.params['src'],
