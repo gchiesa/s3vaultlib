@@ -24,6 +24,7 @@ class TemplateRenderer(object):
     """
     Renders a template based on S3Fs location
     """
+
     def __init__(self, template_file, s3fs):
         """
 
@@ -56,6 +57,7 @@ class S3Vault(object):
     """
     Implements a Vault by using S3 as backend and KMS as way to protect the data
     """
+
     def __init__(self, bucket, path, connection_factory=None):
         """
 
@@ -179,12 +181,7 @@ def check_args():
     :return: args object
     """
     parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli', version=__version__)
-    parser.add_argument('-b', '--bucket', dest='bucket', required=True,
-                        help='Bucket to use for S3Vault')
-    parser.add_argument('-p', '--path', dest='path', required=True,
-                        help='Path to use in the bucket')
-    parser.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
-                        help='Key alias to use to decrypt data')
+
     parser.add_argument('-L', '--log-level', dest='log_level', required=False,
                         help='Log level to set',
                         choices=['debug', 'info', 'warning', 'error'],
@@ -196,8 +193,17 @@ def check_args():
                         help='AWS region to use',
                         default=None)
 
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument('-b', '--bucket', dest='bucket', required=True,
+                               help='Bucket to use for S3Vault')
+    common_parser.add_argument('-p', '--path', dest='path', required=True,
+                               help='Path to use in the bucket')
+    common_parser.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
+                               help='Key alias to use to decrypt data')
+
     subparsers = parser.add_subparsers(dest='command')
-    template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault')
+    template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault',
+                                     parents=[common_parser])
     template.add_argument('-t', '--template', dest='template', required=True,
                           help='Template to expand from s3vault path',
                           type=argparse.FileType('rb'))
@@ -205,14 +211,16 @@ def check_args():
                           help='Destination file',
                           type=argparse.FileType('wb'))
 
-    pushfile = subparsers.add_parser('push', help='Push a file in the S3Vault')
+    pushfile = subparsers.add_parser('push', help='Push a file in the S3Vault',
+                                     parents=[common_parser])
     pushfile.add_argument('-s', '--src', dest='src', required=True,
                           help='Source file to upload',
                           type=argparse.FileType('rb'))
     pushfile.add_argument('-d', '--dest', dest='dest', required=True,
                           help='Destination name')
 
-    setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the S3Vault')
+    setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the S3Vault',
+                                        parents=[common_parser])
     setproperty.add_argument('-c', '--config', dest='config', required=True,
                              help='Configuration file to manage')
     setproperty.add_argument('-K', '--key', dest='key', required=True,
@@ -246,11 +254,10 @@ def main():
     logger = logging.getLogger(__name__)
     conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
 
-    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
-
     if args.command == 'template':
         try:
             # expose the environemnt variables in 2 dicts
+            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
             ansible_env = copy.deepcopy(os.environ)
             environment = copy.deepcopy(os.environ)
             args.dest.write(s3vault.render_template(args.template.name,
@@ -261,6 +268,7 @@ def main():
             sys.exit(1)
     elif args.command == 'push':
         try:
+            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
             logger.info(args.src.name)
             metadata = s3vault.put_file(src=args.src.name,
                                         dest=args.dest,
@@ -272,6 +280,7 @@ def main():
             sys.exit(1)
     elif args.command == 'configset':
         try:
+            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
             metadata = s3vault.set_property(configfile=args.config,
                                             key=args.key,
                                             value=args.value,
@@ -281,8 +290,8 @@ def main():
             logger.exception('Error while setting property. Error: {t} / {e}'.format(t=str(type(e)),
                                                                                      e=str(e)))
     elif args.command == 'ansible_path':
-            dirname = os.path.dirname(os.path.abspath(__file__))
-            print('{}'.format(os.path.join(dirname, 'ansible')))
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        print('{}'.format(os.path.join(dirname, 'ansible')))
     else:
         logger.error('Command not available')
         sys.exit(1)

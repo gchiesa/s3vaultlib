@@ -40,14 +40,16 @@ keys per role.
 The main feature of the library though, is the capability to abstract S3 in a way you can use it as key/value store or
 blob store in jinja templates while you are provisioning your instance.
 
-S3Vaultlib comes also with a simple cli, s3vaultcli that help to automate some simple tasks.
+S3Vaultlib comes also with a simple cli, s3vaultcli that help to automate some simple tasks
+
+S3Vaultlib implements also an ansible module to automate the template expansion within an Ansible deployment
 
 Ansible Module
 --------------
 The library includes also a useful ansible module that allows you to easily create files from templates.
 Check the following example:
 
-template j2::
+template.j2::
 
     template test
     {{ nginx.server_name }}
@@ -61,7 +63,7 @@ template j2::
     environment2:
     {{ environment['LOGNAME'] }}
 
-playbook::
+playbook.yml::
 
     ---
     - name: test my new module
@@ -95,12 +97,12 @@ Now we provision the secrets in the vault with the cli:
 
 * nginx configuration::
 
-    s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_name -V www.example.com
-    s3vaultcli -b <bucket> -p vault/nginx configset -c nginx -K server_port -V 8443
+    s3vaultcli configset -b <bucket> -p vault/nginx -c nginx -K server_name -V www.example.com
+    s3vaultcli configset -b <bucket> -p vault/nginx -c nginx -K server_port -V 8443
 
 * htpasswd upload::
 
-    s3vaultcli -b <bucket> -p vault/nginx push -s htpasswd -d htpasswd
+    s3vaultcli push -b <bucket> -p vault/nginx -s htpasswd -d htpasswd
 
 *NOTE:* the library will try to detect the role and use a KMS key with the same alias of the role name. If we are in another
 machine (or from our local machine we need to have access to the KMS key and specify the alias with the -k key_alias option)
@@ -133,8 +135,8 @@ And the htpasswd.j2::
 
 When the instance starts in the userdata you can use the s3vaultcli tool to render the templates, in this way::
 
-    s3vaultcli -b <bucket> -p vault/nginx template -t nginx.conf.j2 -d nginx.conf
-    s3vaultcli -b <bucket> -p vault/nginx template -t htpasswd -d htpasswd
+    s3vaultcli template -b <bucket> -p vault/nginx -t nginx.conf.j2 -d nginx.conf
+    s3vaultcli template -b <bucket> -p vault/nginx -t htpasswd -d htpasswd
 
 
 License
