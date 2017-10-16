@@ -5,6 +5,7 @@ import jinja2
 import logging
 import argparse
 import copy
+import ast
 from .connectionfactory import ConnectionFactory
 from .s3fs import S3Fs, S3FsObjectException, S3FsObject
 from .kmsresolver import KMSResolver
@@ -227,6 +228,11 @@ def check_args():
                              help='Key to set')
     setproperty.add_argument('-V', '--value', dest='value', required=True,
                              help='Value to set')
+    setproperty.add_argument('-T', '--type', dest='value_type', required=False,
+                             choices=['string', 'list', 'dict'],
+                             default='string',
+                             help='Data type for the value')
+
     ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
 
     return parser.parse_args()
@@ -242,6 +248,34 @@ def configure_logging(level):
     # formatter = '[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]'
     logging.basicConfig(level=logging.getLevelName(level.upper()),
                         format=formatter)
+
+
+def convert_type(value, value_type):
+    """
+    Convert a string value to the specific type
+    :param value: value to convert
+    :param value_type: destination type
+    :return: the converted object
+    """
+    if value_type == 'string':
+        return str(value)
+
+    try:
+        converted_object = ast.literal_eval(value)
+    except SyntaxError:
+        raise Exception('provided value is a malformed object')
+
+    if value_type not in ['list', 'dict']:
+        raise Exception('value type: {t} not supported'.format(t=value_type))
+
+    try:
+        if value_type == 'list':
+            assert type(converted_object) == list
+        elif value_type == 'dict':
+            assert type(converted_object) == dict
+    except AssertionError:
+        raise Exception('Provided value does not match with the type: {t}'.format(t=value_type))
+    return converted_object
 
 
 def main():
@@ -283,7 +317,7 @@ def main():
             s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
             metadata = s3vault.set_property(configfile=args.config,
                                             key=args.key,
-                                            value=args.value,
+                                            value=convert_type(args.value, args.value_type),
                                             key_alias=args.kms_alias)
             logger.debug('s3fsobject metadata: {d}'.format(d=metadata))
         except Exception as e:
