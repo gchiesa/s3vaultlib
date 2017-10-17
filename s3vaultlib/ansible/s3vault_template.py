@@ -173,7 +173,7 @@ def run_module():
                                                 ansible_env=ansible_env,
                                                 environment=environment))
 
-    module.set_mode_if_different(dest_file, module.params['mode'], result['changed'])
+    module.set_mode_if_different(dest_file, str(module.params['mode']), result['changed'])
     module.set_owner_if_different(dest_file, module.params['owner'], result['changed'])
     module.set_group_if_different(dest_file, module.params['group'], result['changed'])
 
