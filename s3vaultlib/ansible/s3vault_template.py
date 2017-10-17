@@ -113,9 +113,6 @@ def run_module():
         profile=dict(type='str', required=False, default=None),
         src=dict(type='str', required=True),
         dest=dict(type='str', required=True),
-        mode=dict(type='str', required=False, default='0666'),
-        owner=dict(type='str', required=False, default='root'),
-        group=dict(type='str', required=False, default='root'),
         ec2=dict(type='bool', required=False, default=True)
     )
 
@@ -136,6 +133,7 @@ def run_module():
     # supports check mode
     module = AnsibleModule(
         argument_spec=module_args,
+        add_file_common_args=True,
         supports_check_mode=True
     )
 
@@ -173,11 +171,10 @@ def run_module():
                                                 ansible_env=ansible_env,
                                                 environment=environment))
 
-    module.set_mode_if_different(dest_file, str(module.params['mode']), result['changed'])
-    module.set_owner_if_different(dest_file, module.params['owner'], result['changed'])
-    module.set_group_if_different(dest_file, module.params['group'], result['changed'])
-
-    result['changed'] = True
+    file_args = module.load_file_common_arguments(module.params)
+    # path is used for the s3 bucket so we will override with the dest file
+    file_args['path'] = module.params['dest']
+    result['changed'] = module.set_fs_attributes_if_different(file_args, result['changed'])
     result['message'] = 'Template: {src} expanded to: {dest}'.format(src=src_file,
                                                                      dest=dest_file)
     module.exit_json(**result)
