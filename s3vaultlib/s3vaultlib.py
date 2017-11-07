@@ -199,8 +199,13 @@ def check_args():
                                help='Bucket to use for S3Vault')
     common_parser.add_argument('-p', '--path', dest='path', required=True,
                                help='Path to use in the bucket')
-    common_parser.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
-                               help='Key alias to use to decrypt data')
+    kms = common_parser.add_mutually_exclusive_group()
+    kms.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
+                     default='',
+                     help='Key alias to use to decrypt data')
+    kms.add_argument('--kms-arn', dest='kms_arn', required=False,
+                     default='',
+                     help='Key arn to use to decrypt data')
 
     subparsers = parser.add_subparsers(dest='command')
     template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault',
@@ -306,6 +311,7 @@ def main():
             logger.info(args.src.name)
             metadata = s3vault.put_file(src=args.src.name,
                                         dest=args.dest,
+                                        encryption_key_arn=args.kms_arn,
                                         key_alias=args.kms_alias)
             logger.debug('s3fsobject metadata: {d}'.format(d=metadata))
         except Exception as e:
@@ -318,6 +324,7 @@ def main():
             metadata = s3vault.set_property(configfile=args.config,
                                             key=args.key,
                                             value=convert_type(args.value, args.value_type),
+                                            encryption_key_arn=args.kms_arn,
                                             key_alias=args.kms_alias)
             logger.debug('s3fsobject metadata: {d}'.format(d=metadata))
         except Exception as e:
