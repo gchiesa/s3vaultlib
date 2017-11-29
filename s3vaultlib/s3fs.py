@@ -2,7 +2,7 @@
 import logging
 import json
 import os
-import StringIO
+from io import BytesIO
 from .connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
@@ -112,7 +112,7 @@ class S3Fs(object):
                                                                                            s=len(content),
                                                                                            b=self._bucket,
                                                                                            p=self._path))
-        object_body = StringIO.StringIO(content)
+        object_body = BytesIO(content)
         self.fs.put_object(Bucket=self._bucket,
                            ServerSideEncryption='aws:kms',
                            Body=object_body,
