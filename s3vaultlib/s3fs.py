@@ -2,6 +2,7 @@
 import logging
 import json
 import os
+import StringIO
 from .connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
@@ -111,9 +112,10 @@ class S3Fs(object):
                                                                                            s=len(content),
                                                                                            b=self._bucket,
                                                                                            p=self._path))
+        object_body = StringIO.StringIO(content)
         self.fs.put_object(Bucket=self._bucket,
                            ServerSideEncryption='aws:kms',
-                           Body=content,
+                           Body=object_body,
                            Key=os.path.join(self._path, name),
                            SSEKMSKeyId=encryption_key_arn)
         s3obj = next(iter([s3fsobj for s3fsobj in self._get_s3fsobjects(refresh=True) if s3fsobj.name == name]), None)
