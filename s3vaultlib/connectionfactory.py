@@ -6,6 +6,7 @@ import boto3
 
 from .ec2metadata import EC2Metadata
 from .tokenfactory import TokenFactory
+from copy import deepcopy
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -20,7 +21,6 @@ class ConnectionFactory(object):
     """
     Object that allocate connection by supporting also connection profile and extended paramaters
     """
-
     def __init__(self, region=None, endpoint=None, **params):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._region = region

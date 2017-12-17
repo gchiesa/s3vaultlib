@@ -1,0 +1,24 @@
+---
+s3vaultlib:
+  vault:
+    bucket: "123456-vault"
+  roles:
+    - name: credential-server
+      # this will be used only if the role creation is disabled
+      role_arn: 'role::arn'
+      privileges: [read, write]
+      path: _all_
+      kms_alias: api
+      # this values will be referenced by import value in cloud formation
+      managed_policies:
+        - external_policyA
+    - name: es6
+      privileges: [read]
+      kms_alias: es
+      path:
+      - es/
+    - name: api
+      privileges: [read]
+      kms_alias: api
+      path:
+      - api/

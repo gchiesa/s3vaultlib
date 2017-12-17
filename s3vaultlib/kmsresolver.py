@@ -58,3 +58,4 @@ class KMSResolver(object):
         if not key_arn:
             raise KMSResolverException('Unable to resolve the key')
         return key_arn
+
