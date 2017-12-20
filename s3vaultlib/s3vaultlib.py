@@ -54,6 +54,61 @@ class TemplateRenderer(object):
         return result
 
 
+class TemplateFileException(Exception):
+    pass
+
+
+class TemplateFile(object):
+    def __init__(self, filename):
+        self._filename = filename
+        self._template_data = None
+
+    @property
+    def filename(self):
+        return self._filename
+
+    def _get_template_content(self):
+        with open(self._filename, 'r') as fh:
+            self._template_data = fh.read()
+
+    @property
+    def template_data(self):
+        if not self._template_data:
+            self._get_template_content()
+        return self._template_data
+
+    def _get_raw_copy_filename(self):
+        data = self.template_data.strip()
+        if data[0:2] != '{{' or data[-2:] != '}}':
+            raise ValueError()
+        inner_data = data[2:-2]
+        if '|' in inner_data:
+            raise ValueError()
+        return inner_data.strip()
+
+    def is_raw_copy(self, s3fs_objects):
+        """
+        Detect if the template represent a raw copy of the file
+        :param template_file:
+        :param s3fs_objects:
+        :return:
+        """
+        try:
+            filename = self._get_raw_copy_filename()
+        except ValueError:
+            return False
+        if filename not in [obj.name for obj in s3fs_objects]:
+            return False
+        return True
+
+    def get_raw_copy_src(self):
+        try:
+            filename = self._get_raw_copy_filename()
+        except ValueError:
+            return None
+        return filename
+
+
 class S3Vault(object):
     """
     Implements a Vault by using S3 as backend and KMS as way to protect the data
@@ -115,8 +170,14 @@ class S3Vault(object):
         :rtype: basestring
         """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
-        template_renderer = TemplateRenderer(template_file, s3fs)
-        return template_renderer.render(**kwargs)
+        tpl = TemplateFile(template_file)
+        if tpl.is_raw_copy(s3fs.objects):
+            s3fsobject = s3fs.get_object(tpl.get_raw_copy_src())
+            data = s3fsobject.raw()
+        else:
+            template_renderer = TemplateRenderer(tpl.filename, s3fs)
+            data = template_renderer.render(**kwargs)
+        return data
 
     def create_config_property(self, configfile, encryption_key_arn='', key_alias='', role_name=''):
         """

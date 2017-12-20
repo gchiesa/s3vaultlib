@@ -207,7 +207,7 @@ class S3FsObject(object):
         response = self._fs.get_object(Bucket=self._bucket, Key=object_path)
         if not response.get('Body'):
             raise S3FsObjectException('Unable to read the file content for key: {k}'.format(k=object_path))
-        self._raw = response['Body'].read()
+        self._raw = bytes(response['Body'].read())
         return self._raw
 
     @staticmethod
@@ -276,4 +276,11 @@ class S3FsObject(object):
         """
         if not self._raw:
             self._load_content()
+        return self._raw.decode('utf-8')
+
+    def raw(self):
+        if not self._raw:
+            self._load_content()
         return self._raw
+
+
