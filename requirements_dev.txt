@@ -11,4 +11,4 @@ PyYAML==3.12
 pytest==3.2.1
 pytest-runner==2.11.1
 twine
-ansible==2.4.0.0
+ansible==2.4.3.0
