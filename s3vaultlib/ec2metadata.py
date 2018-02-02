@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import requests
-import logging
 import json
+import logging
+
+import requests
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"

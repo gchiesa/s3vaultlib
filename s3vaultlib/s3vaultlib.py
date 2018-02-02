@@ -1,16 +1,20 @@
 #!/usr/bin/env python
-import sys
-import os
-import jinja2
-import logging
 import argparse
-import copy
 import ast
-from .connectionfactory import ConnectionFactory
-from .s3fs import S3Fs, S3FsObjectException, S3FsObject
-from .kmsresolver import KMSResolver
+import copy
+import logging
+import os
+import sys
+from getpass import getpass
+
+import jinja2
 from botocore.client import Config
+
 from . import __version__
+from .connectionfactory import ConnectionFactory
+from .kmsresolver import KMSResolver
+from .s3fs import S3Fs, S3FsObjectException, S3FsObject
+from .tokenfactory import TokenFactory
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -298,9 +302,11 @@ def check_args():
                              choices=['string', 'list', 'dict'],
                              default='string',
                              help='Data type for the value')
-
+    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
+    """ :type : argparse.ArgumentParser """
+    create_session.add_argument('-r', '--role-name', dest='role_name', required=True,
+                                help='Role to assume')
     ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
-
     return parser.parse_args()
 
 
@@ -352,7 +358,8 @@ def main():
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger(__name__)
-    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
+    token_factory = TokenFactory()
+    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token)
 
     if args.command == 'template':
         try:
@@ -391,6 +398,16 @@ def main():
         except Exception as e:
             logger.exception('Error while setting property. Error: {t} / {e}'.format(t=str(type(e)),
                                                                                      e=str(e)))
+    elif args.command == 'create_session':
+        try:
+            external_id = getpass('External ID:')
+            token_factory = TokenFactory(role_name=args.role_name, external_id=external_id)
+            token_factory.generate_token()
+        except Exception as e:
+            logger.exception('Error while setting the token. Type: {t}. Error: {e}'.format(t=str(type(e)), e=str(e)))
+            sys.exit(1)
+        if token_factory.token:
+            logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
     elif args.command == 'ansible_path':
         dirname = os.path.dirname(os.path.abspath(__file__))
         print('{}'.format(os.path.join(dirname, 'ansible')))

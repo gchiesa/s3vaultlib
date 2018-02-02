@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import logging
 import json
+import logging
 import os
 from io import BytesIO
+
 from .connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
