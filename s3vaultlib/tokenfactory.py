@@ -5,10 +5,12 @@ import os
 import uuid
 from copy import deepcopy
 from datetime import datetime
+from stat import S_IRUSR, S_IWUSR
 
 import boto3
 import pytz
 from dateutil import parser
+
 from .ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
@@ -69,7 +71,7 @@ class TokenFactory(object):
     def _save_token(self, token_dict):
         with open(os.path.expanduser(self.TOKEN_FILENAME), 'wb') as f_token:
             f_token.write(json.dumps(token_dict))
-        os.chmod(os.path.expanduser(self.TOKEN_FILENAME), 0600)
+        os.chmod(os.path.expanduser(self.TOKEN_FILENAME), S_IRUSR | S_IWUSR)
 
     def _read_token(self):
         if not os.path.exists(os.path.expanduser(self.TOKEN_FILENAME)):
