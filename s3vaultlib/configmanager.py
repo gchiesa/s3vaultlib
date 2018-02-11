@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import logging
+
 import yaml
-from kmsresolver import KMSResolver
 from yaml.scanner import ScannerError
+
+from kmsresolver import KMSResolver
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"

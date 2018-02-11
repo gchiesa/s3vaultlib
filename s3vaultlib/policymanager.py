@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-import logging
 import json
-from configmanager import ConfigManager
+import logging
 from collections import OrderedDict
+
 from jinja2 import Environment, PackageLoader
 from string_utils import snake_case_to_camel
+
+from configmanager import ConfigManager
 from . import __application__
 
 __author__ = "Giuseppe Chiesa"
