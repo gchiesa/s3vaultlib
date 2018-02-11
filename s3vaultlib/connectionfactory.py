@@ -6,7 +6,6 @@ import boto3
 
 from .ec2metadata import EC2Metadata
 from .tokenfactory import TokenFactory
-from copy import deepcopy
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
