@@ -44,7 +44,7 @@
             "Principal": {
               "AWS": [
                 {% for role_w in vault.roles if 'write' in role_w.privileges  %}
-                { "Fn::GetAtt": [ "S3VRole{{ role.name|cfsanitize|title }}", "Arn" ] }{{ ',' if not loop.last }}
+                { "Fn::GetAtt": [ "S3VRole{{ role_w.name|cfsanitize|title }}", "Arn" ] }{{ ',' if not loop.last }}
                 {% endfor %}
               ]
             },
@@ -62,7 +62,7 @@
             "Effect": "Allow",
             "Principal": {
               "AWS": [
-                { "Fn::GetAtt": [ "{{ role.name }}", "Arn" ] }
+                { "Fn::GetAtt": [ "S3VRole{{ role.name|cfsanitize|title }}", "Arn" ] }
               ]
             },
             "Action": [

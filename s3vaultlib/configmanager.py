@@ -5,6 +5,7 @@ import yaml
 from yaml.scanner import ScannerError
 
 from kmsresolver import KMSResolver
+from . import __application__
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -33,7 +34,7 @@ class Role(object):
         :param config_obj: ConfigManager object
         :type config_obj: ConfigManager
         """
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._name = name
         self._priv = []
         self._path = []
@@ -122,7 +123,7 @@ class Role(object):
 
 class ConfigManager(object):
     def __init__(self, config_file):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._config_file = config_file
         self.vault = None
         self.roles = []

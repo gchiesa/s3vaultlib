@@ -4,6 +4,7 @@ import logging
 import jinja2
 from botocore.client import Config
 
+from . import __application__
 from .connectionfactory import ConnectionFactory
 from .kmsresolver import KMSResolver
 from .s3fs import S3Fs, S3FsObjectException, S3FsObject
@@ -118,7 +119,7 @@ class S3Vault(object):
         :param connection_factory: connection factory
         :type connection_factory: ConnectionFactory
         """
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._bucket = bucket
         self._path = path
         self._connection_manager = connection_factory

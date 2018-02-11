@@ -30,7 +30,7 @@ def cloudformation_prettyprint(json_string):
 
 class PolicyManager(object):
     def __init__(self, config_manager):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._config_manager = config_manager  # type: ConfigManager
         self._j2env = Environment(loader=PackageLoader(__application__), trim_blocks=True)
         self._j2env.filters['cfsanitize'] = cloudformation_sanitize_string

@@ -8,6 +8,7 @@ import shutil
 import sys
 from getpass import getpass
 
+from . import __application__
 from . import __version__
 from .configmanager import ConfigManager
 from .connectionfactory import ConnectionFactory
@@ -116,9 +117,12 @@ def configure_logging(level):
     :return:
     """
     formatter = '[%(name)s] [%(levelname)s] : %(message)s'
+    logging.basicConfig(format=formatter)
     # formatter = '[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]'
-    logging.basicConfig(level=logging.getLevelName(level.upper()),
-                        format=formatter)
+    logger = logging.getLogger(__application__)
+    logger.setLevel(logging.getLevelName(level.upper()))
+    # logging.basicConfig(level=logging.getLevelName(level.upper()),
+    #                     format=formatter)
 
 
 def convert_type(value, value_type):
@@ -156,7 +160,7 @@ def main():
     """
     args = check_args()
     configure_logging(args.log_level)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
     token_factory = TokenFactory()
     conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token)
 
@@ -208,7 +212,7 @@ def main():
         if token_factory.token:
             logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
     elif args.command == 'create_s3vault_config':
-        shutil.copy2(os.path.join(os.path.realpath(__file__), 'resources', 's3vault.example.yml'),
+        shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 's3vault.example.yml'),
                      args.output_file.name)
         logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
     elif args.command == 'create_cloudformation':
@@ -220,6 +224,7 @@ def main():
         except Exception as e:
             logger.exception('Exception while generating CloudFormation.')
             sys.exit(1)
+        logger.info('CloudFormation template generated: {}'.format(args.output_file.name))
     elif args.command == 'ansible_path':
         dirname = os.path.dirname(os.path.abspath(__file__))
         print('{}'.format(os.path.join(dirname, 'ansible')))

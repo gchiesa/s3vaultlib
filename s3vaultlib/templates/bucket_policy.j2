@@ -1,4 +1,9 @@
 "BucketPolicy{{ vault.bucket|cfsanitize|title }}" : {
+  "DependsOn": [
+    {% for keydep in vault.roles %}
+    "KMSKey{{ keydep.name|cfsanitize|title }}"{{ ',' if not loop.last }}
+    {% endfor %}
+  ],
   "Type" : "AWS::S3::BucketPolicy",
   "Properties" : {
     "Bucket" : "{{ vault.bucket }}",
@@ -37,7 +42,7 @@
                 ],
                 "Condition": {
                     "StringNotEquals": {
-                        "s3:x-amz-server-side-encryption-aws-kms-key-id": { "Ref": "S3VRole{{ role.name|cfsanitize|title  }}" }
+                        "s3:x-amz-server-side-encryption-aws-kms-key-id": { "Fn::GetAtt": [ "KMSKey{{ role.name|cfsanitize|title }}", "Arn" ] }
                     }
                 }
             },

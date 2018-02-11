@@ -4,6 +4,7 @@ import logging
 import os
 from io import BytesIO
 
+from . import __application__
 from .connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
@@ -36,7 +37,7 @@ class S3Fs(object):
         """
         self._connection_factory = connection_factory
         """ :type : ConnectionFactory """
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._bucket = bucket
         self._path = path
         self._s3fs_objects = []
@@ -151,7 +152,7 @@ class S3FsObject(object):
         :param path: path
         :param fs: s3 cient
         """
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._data = data
         self._header = {}
         self._bucket = bucket
