@@ -1,20 +1,12 @@
 #!/usr/bin/env python
-import argparse
-import ast
-import copy
 import logging
-import os
-import sys
-from getpass import getpass
 
 import jinja2
 from botocore.client import Config
 
-from . import __version__
 from .connectionfactory import ConnectionFactory
 from .kmsresolver import KMSResolver
 from .s3fs import S3Fs, S3FsObjectException, S3FsObject
-from .tokenfactory import TokenFactory
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
