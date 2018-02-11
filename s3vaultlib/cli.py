@@ -4,11 +4,16 @@ import ast
 import copy
 import logging
 import os
+import shutil
 import sys
+from getpass import getpass
 
 from . import __version__
+from .configmanager import ConfigManager
 from .connectionfactory import ConnectionFactory
+from .policymanager import PolicyManager
 from .s3vaultlib import S3Vault
+from .tokenfactory import TokenFactory
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -80,9 +85,27 @@ def check_args():
                              choices=['string', 'list', 'dict'],
                              default='string',
                              help='Data type for the value')
-
+    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
+    """ :type : argparse.ArgumentParser """
+    create_session.add_argument('-r', '--role-name', dest='role_name', required=True,
+                                help='Role to assume')
+    create_s3vault_config = subparsers.add_parser('create_s3vault_config', help='Create a new s3vault configuration '
+                                                                                'file')
+    """ :type : argparse.ArgumentParser """
+    create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=True,
+                                       type=argparse.FileType('wb'),
+                                       help='Config file to create')
+    cloudformation_generate = subparsers.add_parser('create_cloudformation',
+                                                    help='Generate a CloudFormation template from a s3vault '
+                                                         'configuration')
+    """ :type : argparse.ArgumentParser """
+    cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
+                                         type=argparse.FileType('rb'),
+                                         help='S3vault configuration file')
+    cloudformation_generate.add_argument('-o', '--output', dest='output_file', required=True,
+                                         type=argparse.FileType('wb'),
+                                         help='CloudFormation output file')
     ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
-
     return parser.parse_args()
 
 
@@ -134,11 +157,12 @@ def main():
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger(__name__)
-    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile)
+    token_factory = TokenFactory()
+    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token)
 
     if args.command == 'template':
         try:
-            # expose the environment variables in 2 dicts
+            # expose the environemnt variables in 2 dicts
             s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
             ansible_env = copy.deepcopy(os.environ)
             environment = copy.deepcopy(os.environ)
@@ -173,6 +197,29 @@ def main():
         except Exception as e:
             logger.exception('Error while setting property. Error: {t} / {e}'.format(t=str(type(e)),
                                                                                      e=str(e)))
+    elif args.command == 'create_session':
+        try:
+            external_id = getpass('External ID:')
+            token_factory = TokenFactory(role_name=args.role_name, external_id=external_id)
+            token_factory.generate_token()
+        except Exception as e:
+            logger.exception('Error while setting the token. Type: {t}. Error: {e}'.format(t=str(type(e)), e=str(e)))
+            sys.exit(1)
+        if token_factory.token:
+            logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
+    elif args.command == 'create_s3vault_config':
+        shutil.copy2(os.path.join(os.path.realpath(__file__), 'resources', 's3vault.example.yml'),
+                     args.output_file.name)
+        logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
+    elif args.command == 'create_cloudformation':
+        try:
+            s3vault_config = ConfigManager(args.s3vault_config.name).load_config()
+            policy_manager = PolicyManager(s3vault_config)
+            with open(args.output_file.name, 'wb') as cf_file:
+                cf_file.write(policy_manager.generate_cloudformation())
+        except Exception as e:
+            logger.exception('Exception while generating CloudFormation.')
+            sys.exit(1)
     elif args.command == 'ansible_path':
         dirname = os.path.dirname(os.path.abspath(__file__))
         print('{}'.format(os.path.join(dirname, 'ansible')))
