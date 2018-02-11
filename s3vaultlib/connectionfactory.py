@@ -20,7 +20,6 @@ class ConnectionFactory(object):
     """
     Object that allocate connection by supporting also connection profile and extended paramaters
     """
-
     def __init__(self, region=None, endpoint=None, **params):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._region = region
