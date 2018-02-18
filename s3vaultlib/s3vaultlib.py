@@ -38,6 +38,7 @@ class TemplateRenderer(object):
     def render(self, **kwargs):
         """
         Renders the template
+
         :param kwargs: additional variables to use in the rendering
         :return: content of the rendered template
         :rtype: basestring
@@ -86,6 +87,7 @@ class TemplateFile(object):
     def is_raw_copy(self, s3fs_objects):
         """
         Detect if the template represent a raw copy of the file
+
         :param template_file:
         :param s3fs_objects:
         :return:
@@ -129,6 +131,7 @@ class S3Vault(object):
     def put_file(self, src, dest, encryption_key_arn='', key_alias='', role_name=''):
         """
         Upload a file to the S3Vault
+
         :param src: source file name
         :param dest: destination file name
         :param encryption_key_arn: KMS Key arn to use
@@ -150,6 +153,7 @@ class S3Vault(object):
     def get_file(self, name):
         """
         Get a file from S3Vault
+
         :param name: filename
         :return: file content
         :rtype: basestring
@@ -161,6 +165,7 @@ class S3Vault(object):
     def render_template(self, template_file, **kwargs):
         """
         Renders a template file using the information available in the S3Vault
+
         :param template_file: file name to use as template
         :param kwargs: additional variables to use in the rendering
         :return: rendered content
@@ -221,6 +226,7 @@ class S3Vault(object):
     def get_property(self, configfile, key):
         """
         Get a configuration property from a config file from the S3Vault
+
         :param configfile: configuration file
         :param key: key to query
         :return: value of the key

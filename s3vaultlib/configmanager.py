@@ -30,6 +30,7 @@ class Role(object):
     def __init__(self, name, config_obj):
         """
         Role Object
+
         :param name: role name
         :param config_obj: ConfigManager object
         :type config_obj: ConfigManager

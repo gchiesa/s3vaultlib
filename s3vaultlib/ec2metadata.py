@@ -58,6 +58,7 @@ class EC2Metadata(object):
     def account_id(self):
         """
         Return the account_id associated to the instance
+
         :return: account_id
         :rtype: basestring
         """
@@ -67,6 +68,7 @@ class EC2Metadata(object):
     def region(self):
         """
         Return the region associated to the instance
+
         :return: region
         :rtype: basestring
         """
@@ -76,6 +78,7 @@ class EC2Metadata(object):
     def instance_id(self):
         """
         Return the instance_id associated to the instance
+
         :return: instance_id
         :rtype: basestring
         """

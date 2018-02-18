@@ -37,6 +37,7 @@ class KMSResolver(object):
     def retrieve_key_arn(self):
         """
         Return the KMS arn of a key
+
         :return: key arn
         :rtype: basestring
         """

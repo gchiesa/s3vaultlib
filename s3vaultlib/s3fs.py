@@ -68,6 +68,7 @@ class S3Fs(object):
     def _get_s3fsobjects(self, refresh=False):
         """
         load the s3fsobjects from an S3 path
+
         :param refresh: True to reload the objects
         :return: list of object
         :rtype: list
@@ -89,6 +90,7 @@ class S3Fs(object):
     def get_object(self, name):
         """
         Return a s3fsobject identified by name
+
         :param name: object name
         :return: s3fsobject
         :rtype: S3FsObject
@@ -101,6 +103,7 @@ class S3Fs(object):
     def put_object(self, name, content, encryption_key_arn):
         """
         Put an object in the S3 path by encrypting it with SSE
+
         :param name: object name
         :param content: content of the object
         :param encryption_key_arn: key arn to use for encryption
@@ -126,6 +129,7 @@ class S3Fs(object):
     def update_s3fsobject(self, s3fsobject):
         """
         Update an S3FSObject
+
         :param s3fsobject: S3FsObject to update
         :type: S3FsObject
         :return: the updated object
@@ -169,6 +173,7 @@ class S3FsObject(object):
     def kms_arn(self):
         """
         Return the KMS ARN used to encrypt the object
+
         :return: KMS ARN
         :rtype: basestring
         """
@@ -178,6 +183,7 @@ class S3FsObject(object):
     def is_encrypted(self):
         """
         Return true if the object is encrypted
+
         :return: True or False
         :rtype: bool
         """
@@ -189,6 +195,7 @@ class S3FsObject(object):
     def metadata(self):
         """
         Return the metadata associated with the object (file metadata)
+
         :return: medatata
         :rtype: dict
         """
@@ -197,6 +204,7 @@ class S3FsObject(object):
     def _load_content(self):
         """
         Load the content of the file pointed by S3FsObject
+
         :return: content of the file
         """
         object_path = os.path.join(self._path, self.name)
@@ -216,6 +224,7 @@ class S3FsObject(object):
     def is_json(data):
         """
         Return True if the content is a valid json
+
         :param data: content to evaluate
         :return: True or False
         :rtype: bool
@@ -229,6 +238,7 @@ class S3FsObject(object):
     def __getitem__(self, item):
         """
         Overrides the getitem method
+
         :param item:
         :return:
         """
@@ -246,6 +256,7 @@ class S3FsObject(object):
     def __setitem__(self, key, value):
         """
         Overrides the setitem method
+
         :param key:
         :param value:
         :return:
@@ -263,6 +274,7 @@ class S3FsObject(object):
     def __getattr__(self, item):
         """
         Override the setattr method
+
         :param item:
         :return:
         """
@@ -274,6 +286,7 @@ class S3FsObject(object):
     def __str__(self):
         """
         Override the str method
+
         :return:
         """
         if not self._raw:

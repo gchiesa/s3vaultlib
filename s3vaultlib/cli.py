@@ -28,6 +28,7 @@ __status__ = "PerpetualBeta"
 def check_args():
     """
     Check the args from the command line
+
     :return: args object
     """
     parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli', version=__version__)
@@ -113,6 +114,7 @@ def check_args():
 def configure_logging(level):
     """
     Configure the logging level of the tool
+
     :param level: level to set
     :return:
     """
@@ -128,6 +130,7 @@ def configure_logging(level):
 def convert_type(value, value_type):
     """
     Convert a string value to the specific type
+
     :param value: value to convert
     :param value_type: destination type
     :return: the converted object
@@ -156,6 +159,7 @@ def convert_type(value, value_type):
 def main():
     """
     Command line tool to use some functionality of the S3Vault
+
     :return:
     """
     args = check_args()
