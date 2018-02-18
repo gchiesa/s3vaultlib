@@ -1,0 +1,85 @@
+{% for role in vault.roles if 'write' not in role.privileges %}
+"KMSKey{{ role.name|cfsanitize|title }}": {
+    "DependsOn": [
+        "S3VRole{{ role.name|cfsanitize|title }}",
+        {%  for dep in vault.roles if 'write' in dep.privileges %}
+        "S3VRole{{ dep.name|cfsanitize|title }}"{{ ',' if not loop.last }}
+        {% endfor %}
+    ],
+    "DeletionPolicy": "Retain",
+    "Type": "AWS::KMS::Key",
+    "Properties": {
+      "Description": "Key used from role {{ role.name }}",
+      "KeyPolicy": {
+        "Version": "2012-10-17",
+        "Id": "KEY-POLICY",
+        "Statement": [
+          {
+            "Sid": "Allow administration of the key",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": [
+                { "Fn::Sub": [ "arn:aws:iam::${a}:root", { "a": { "Ref": "AWS::AccountId" } } ] }
+              ]
+            },
+            "Action": [
+              "kms:Create*",
+              "kms:Describe*",
+              "kms:Enable*",
+              "kms:List*",
+              "kms:Put*",
+              "kms:Update*",
+              "kms:Revoke*",
+              "kms:Disable*",
+              "kms:Get*",
+              "kms:Delete*",
+              "kms:ScheduleKeyDeletion",
+              "kms:CancelKeyDeletion"
+            ],
+            "Resource": "*"
+          },
+          {
+            "Sid": "Allow use of the key for encryption and decryption",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": [
+                {% for role_w in vault.roles if 'write' in role_w.privileges  %}
+                { "Fn::GetAtt": [ "S3VRole{{ role_w.name|cfsanitize|title }}", "Arn" ] }{{ ',' if not loop.last }}
+                {% endfor %}
+              ]
+            },
+            "Action": [
+              "kms:Decrypt",
+              "kms:DescribeKey",
+              "kms:Encrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*"
+            ],
+            "Resource": "*"
+          },
+          {
+            "Sid": "Allow use of the key for decryption only",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": [
+                { "Fn::GetAtt": [ "S3VRole{{ role.name|cfsanitize|title }}", "Arn" ] }
+              ]
+            },
+            "Action": [
+              "kms:Decrypt",
+              "kms:DescribeKey"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    }
+  },
+  "KMSKeyAlias{{ role.name|cfsanitize|title }}": {
+    "Type": "AWS::KMS::Alias",
+    "Properties": {
+      "AliasName": "alias/{{ role.name }}",
+      "TargetKeyId": { "Ref": "KMSKey{{ role.name|cfsanitize|title }}" }
+    }
+  }{{ ',' if not loop.last }}
+{% endfor %}
