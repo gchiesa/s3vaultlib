@@ -1,5 +1,5 @@
 Welcome to S3Vault Library's documentation!
-======================================
+===========================================
 
 Contents:
 

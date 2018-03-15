@@ -4,6 +4,7 @@
 """The setup script."""
 
 from setuptools import setup, find_packages
+from s3vaultlib import __application__
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -25,8 +26,8 @@ test_requirements = [
 ]
 
 setup(
-    name='s3vaultlib',
-    version='1.7.1',
+    name=__application__,
+    version='1.8.0',
     description="Python library to expose S3 as vault to store encrypted data",
     long_description=readme + '\n\n' + history,
     author="Giuseppe Chiesa",
@@ -56,7 +57,7 @@ setup(
     setup_requires=setup_requirements,
     entry_points={
         'console_scripts': [
-            's3vaultcli = s3vaultlib.s3vaultlib:main'
+            's3vaultcli = s3vaultlib.cli:main'
         ]
     }
 )

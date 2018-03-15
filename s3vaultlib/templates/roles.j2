@@ -1,0 +1,71 @@
+{%  for role in vault.roles %}
+"S3VRole{{ role.name|cfsanitize|title }}": {
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": { "Fn::Sub": [ "arn:aws:iam::${a}:root", { "a": { "Ref": "AWS::AccountId" } } ] },
+                        "Service": [
+                            "ec2.amazonaws.com"
+                        ]
+                    },
+                    "Action": [
+                        "sts:AssumeRole"
+                    ]
+                },
+                {
+                    "Sid": "AllowListKeyMaterialsArtifacts",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:List*"
+                    ],
+                    "Resource": [
+                        {%  for path in role.path %}
+                        "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
+                        {% endfor %}
+                    ]
+                },
+                {
+                    "Sid": "AllowGetKeyMaterialsArtifacts",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:Get*"
+                    ],
+                    "Resource": [
+                        {%  for path in role.path %}
+                        "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
+                        {% endfor %}
+                    ]
+                }
+                {% if 'write' in role.privileges %}
+                ,{
+                    "Sid": "AllowWriteKeyMaterialsArtifacts",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:Put*"
+                    ],
+                    "Resource": [
+                        {%  for path in role.path %}
+                        "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
+                        {% endfor %}
+                    ]
+                }
+                {% endif %}
+            ]
+        },
+        "Path": "/",
+        "RoleName": "{{ role.name }}"
+        {%  if role.managed_policies %}
+        ,"ManagedPolicyArns": [
+            {%  for managed_policy in role.managed_policies %}
+            { "Fn::ImportValue": "{{ managed_policy }}" }{{ ',' if not loop.last }}
+            {% endfor %}
+        ]
+        {%  endif %}
+    }
+}{{ ',' if not loop.last }}
+{%  endfor %}

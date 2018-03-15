@@ -37,6 +37,7 @@ class KMSResolver(object):
     def retrieve_key_arn(self):
         """
         Return the KMS arn of a key
+
         :return: key arn
         :rtype: basestring
         """
@@ -58,3 +59,4 @@ class KMSResolver(object):
         if not key_arn:
             raise KMSResolverException('Unable to resolve the key')
         return key_arn
+

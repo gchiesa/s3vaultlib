@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import boto3
 
+from . import __application__
 from .ec2metadata import EC2Metadata
 from .tokenfactory import TokenFactory
 
@@ -20,9 +21,8 @@ class ConnectionFactory(object):
     """
     Object that allocate connection by supporting also connection profile and extended paramaters
     """
-
     def __init__(self, region=None, endpoint=None, **params):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._region = region
         self._endpoint = endpoint
         self._params = params

@@ -11,6 +11,7 @@ import boto3
 import pytz
 from dateutil import parser
 
+from . import __application__
 from .ec2metadata import EC2Metadata
 
 __author__ = "Giuseppe Chiesa"
@@ -30,7 +31,7 @@ class TokenFactory(object):
     TOKEN_FILENAME = '~/.s3vaultlib.token'
 
     def __init__(self, role_name=None, role_arn=None, external_id=None):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._role_name = role_name
         self._role_arn = role_arn
         self._external_id = external_id

@@ -4,6 +4,8 @@ import logging
 
 import requests
 
+from . import __application__
+
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
 __credits__ = ["Giuseppe Chiesa"]
@@ -22,7 +24,7 @@ class EC2Metadata(object):
     Object that retrieve metadata from within an EC2 instance
     """
     def __init__(self, endpoint='169.254.169.254', version='latest'):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._endpoint = endpoint
         self._version = version
         self._instance_identity_document = None
@@ -56,6 +58,7 @@ class EC2Metadata(object):
     def account_id(self):
         """
         Return the account_id associated to the instance
+
         :return: account_id
         :rtype: basestring
         """
@@ -65,6 +68,7 @@ class EC2Metadata(object):
     def region(self):
         """
         Return the region associated to the instance
+
         :return: region
         :rtype: basestring
         """
@@ -74,6 +78,7 @@ class EC2Metadata(object):
     def instance_id(self):
         """
         Return the instance_id associated to the instance
+
         :return: instance_id
         :rtype: basestring
         """
