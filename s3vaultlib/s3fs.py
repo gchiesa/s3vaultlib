@@ -4,6 +4,8 @@ import logging
 import os
 from io import BytesIO
 
+from dpath.util import merge
+
 from . import __application__
 from .connectionfactory import ConnectionFactory
 
@@ -235,23 +237,39 @@ class S3FsObject(object):
             return False
         return True
 
-    def __getitem__(self, item):
+    def __getitem__(self, key):
         """
         Overrides the getitem method
 
-        :param item:
+        :param key:
         :return:
         """
         if not self._raw:
             self._load_content()
 
         if not self.is_json(self._raw):
-            raise KeyError(item)
+            raise KeyError(key)
 
         json_data = json.loads(self._raw)
-        if json_data.get(item, ''):
-            return json_data[item]
-        raise KeyError(item)
+        return self._get_value(json_data, key)
+
+    def _set_value(self, d, path, value):
+        levels = path.split('.')
+        leaf_key = levels.pop()
+        tmp_dict = {leaf_key: value}
+        for key in reversed(levels):
+            tmp_dict = {key: tmp_dict}
+        merge(d, tmp_dict)
+        return d
+
+    @staticmethod
+    def _get_value(d, path):
+        k, _, rest = path.partition('.')
+        if not rest:
+            return d[k]
+        if not isinstance(d[k], dict):
+            raise KeyError('{} is a leaf value, not a dict'.format(d[k]))
+        return S3FsObject._get_value(d[k], rest)
 
     def __setitem__(self, key, value):
         """
@@ -268,7 +286,8 @@ class S3FsObject(object):
             raise KeyError(key)
 
         json_data = json.loads(self._raw)
-        json_data[key] = value
+        # if the key contains . separator then we assume the key is a nested key and we allocate the entire path
+        json_data = self._set_value(json_data, key, value)
         self._raw = json.dumps(json_data)
 
     def __getattr__(self, item):
