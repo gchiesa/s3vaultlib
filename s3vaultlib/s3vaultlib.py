@@ -217,6 +217,7 @@ class S3Vault(object):
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         try:
             s3fsobject = s3fs.get_object(configfile)
+            """ :type: S3FsObject """
         except S3FsObjectException:
             s3fsobject = self.create_config_property(configfile, encryption_key_arn, key_alias, role_name)
         s3fsobject[key] = value

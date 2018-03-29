@@ -2,11 +2,14 @@
 import argparse
 import ast
 import copy
+import json
 import logging
 import os
 import shutil
 import sys
 from getpass import getpass
+
+import yaml
 
 from . import __application__
 from . import __version__
@@ -84,7 +87,7 @@ def check_args():
     setproperty.add_argument('-V', '--value', dest='value', required=True,
                              help='Value to set')
     setproperty.add_argument('-T', '--type', dest='value_type', required=False,
-                             choices=['string', 'list', 'dict'],
+                             choices=['int', 'string', 'list', 'dict', 'yaml', 'json'],
                              default='string',
                              help='Data type for the value')
     create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
@@ -120,11 +123,24 @@ def configure_logging(level):
     """
     formatter = '[%(name)s] [%(levelname)s] : %(message)s'
     logging.basicConfig(format=formatter)
-    # formatter = '[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]'
     logger = logging.getLogger(__application__)
     logger.setLevel(logging.getLevelName(level.upper()))
-    # logging.basicConfig(level=logging.getLevelName(level.upper()),
-    #                     format=formatter)
+
+
+def load_from_yaml(filename):
+    if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
+        raise Exception('Unable to read file: {}'.format(filename))
+    with open(filename, 'r') as fh:
+        data = yaml.load(fh)
+    return data
+
+
+def load_from_json(filename):
+    if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
+        raise Exception('Unable to read file: {}'.format(filename))
+    with open(filename, 'r') as fh:
+        data = json.load(fh)
+    return data
 
 
 def convert_type(value, value_type):
@@ -137,6 +153,15 @@ def convert_type(value, value_type):
     """
     if value_type == 'string':
         return str(value)
+
+    if value_type == 'int':
+        return int(value)
+
+    if value_type == 'yaml':
+        return load_from_yaml(value)
+
+    if value_type == 'json':
+        return load_from_json(value)
 
     try:
         converted_object = ast.literal_eval(value)
