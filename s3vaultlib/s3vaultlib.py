@@ -8,6 +8,7 @@ from . import __application__
 from .connectionfactory import ConnectionFactory
 from .kmsresolver import KMSResolver
 from .s3fs import S3Fs, S3FsObjectException, S3FsObject
+from ansible.plugins.filter.core import FilterModule
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -32,6 +33,8 @@ class TemplateRenderer(object):
         """
         self._template_file = template_file
         self._jinja2 = jinja2.Environment(trim_blocks=True)
+        # load additional ansible filters
+        self._jinja2.filters.update(FilterModule().filters())
         self._s3fs = s3fs
         """ :type : S3Fs """
 
