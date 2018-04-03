@@ -4,6 +4,7 @@ import ast
 import copy
 import json
 import logging
+import logging.config
 import os
 import shutil
 import sys
@@ -121,10 +122,34 @@ def configure_logging(level):
     :param level: level to set
     :return:
     """
-    formatter = '[%(name)s] [%(levelname)s] : %(message)s'
-    logging.basicConfig(format=formatter)
-    logger = logging.getLogger(__application__)
-    logger.setLevel(logging.getLevelName(level.upper()))
+    dconfig = {
+        'version': 1,
+        'formatters': {
+            'simple': {
+                'format': '[%(name)s] [%(levelname)s] : %(message)s'
+            }
+        },
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': level.upper(),
+                'formatter': 'simple',
+                'stream': 'ext://sys.stdout'
+            }
+        },
+        'loggers': {
+            __application__: {
+                'level': level.upper(),
+                'handlers': ['console'],
+                'propagate': False
+            }
+        },
+        'root': {
+            'level': level.upper(),
+            'handlers': ['console']
+        }
+    }
+    logging.config.dictConfig(dconfig)
 
 
 def load_from_yaml(filename):
