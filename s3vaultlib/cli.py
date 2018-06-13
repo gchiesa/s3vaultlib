@@ -322,7 +322,7 @@ def command_createtoken(args):
 
 def command_createconfig(args):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 's3vault.example.yml'),
+    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_resources', 's3vault.example.yml'),
                  args.output_file.name)
     logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
 
@@ -338,7 +338,7 @@ def command_createcloudformation(args):
 
 def command_ansiblepath():
     dirname = os.path.dirname(os.path.abspath(__file__))
-    print('{}'.format(os.path.join(dirname, 'ansible')))
+    print('{}'.format(os.path.join(dirname, '_resources', 'ansible')))
 
 
 def main():

@@ -66,3 +66,6 @@ target/
 
 # OSX
 .DS_Store
+
+# tox
+test_report.html
