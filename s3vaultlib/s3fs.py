@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import copy
 import json
 import logging
 import os
@@ -201,7 +202,10 @@ class S3FsObject(object):
         :return: medatata
         :rtype: dict
         """
-        return self._data
+        if not self._header:
+            self._load_content()
+        metadata = copy.deepcopy(self._header)
+        return metadata
 
     def _load_content(self):
         """

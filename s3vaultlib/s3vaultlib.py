@@ -3,7 +3,7 @@ import logging
 
 import jinja2
 from botocore.client import Config
-
+import six
 from . import __application__
 from .connectionfactory import ConnectionFactory
 from .kmsresolver import KMSResolver
@@ -148,9 +148,14 @@ class S3Vault(object):
         key_arn = encryption_key_arn
         if not encryption_key_arn:
             key_arn = kms_resolver.retrieve_key_arn()
-        with open(src, 'rb') as src_file:
-            s3fsobj = s3fs.put_object(dest, src_file.read(), key_arn)
-            """ :type : S3FsObject """
+
+        if isinstance(src, six.string_types):
+            src_file = open(src, 'rb')
+        else:
+            src_file = src
+        s3fsobj = s3fs.put_object(dest, src_file.read(), key_arn)
+        """ :type : S3FsObject """
+        src_file.close()
         return s3fsobj.metadata
 
     def get_file(self, name):
@@ -164,6 +169,18 @@ class S3Vault(object):
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         s3fsobject = s3fs.get_object(name)
         return str(s3fsobject)
+
+    def get_file_metadata(self, name):
+        """
+        Get a file from S3Vault
+
+        :param name: filename
+        :return: file content
+        :rtype: dict
+        """
+        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
+        s3fsobject = s3fs.get_object(name)
+        return s3fsobject.metadata
 
     def render_template(self, template_file, **kwargs):
         """

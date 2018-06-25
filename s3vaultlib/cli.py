@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 from getpass import getpass
+from io import BytesIO
 
 import yaml
 
@@ -16,6 +17,7 @@ from . import __application__
 from . import __version__
 from .configmanager import ConfigManager
 from .connectionfactory import ConnectionFactory
+from .editor import Editor, EditorAbortException
 from .policymanager import PolicyManager
 from .s3vaultlib import S3Vault
 from .tokenfactory import TokenFactory
@@ -35,8 +37,9 @@ def check_args():
 
     :return: args object
     """
-    parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli', version=__version__)
 
+    parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-L', '--log-level', dest='log_level', required=False,
                         help='Log level to set',
                         choices=['debug', 'info', 'warning', 'error'],
@@ -62,8 +65,10 @@ def check_args():
                      help='Key arn to use to decrypt data')
 
     subparsers = parser.add_subparsers(dest='command')
+    # template
     template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault',
                                      parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
     template.add_argument('-t', '--template', dest='template', required=True,
                           help='Template to expand from s3vault path',
                           type=argparse.FileType('rb'))
@@ -71,16 +76,30 @@ def check_args():
                           help='Destination file',
                           type=argparse.FileType('wb'))
 
+    # push file
     pushfile = subparsers.add_parser('push', help='Push a file in the S3Vault',
                                      parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
     pushfile.add_argument('-s', '--src', dest='src', required=True,
                           help='Source file to upload',
                           type=argparse.FileType('rb'))
     pushfile.add_argument('-d', '--dest', dest='dest', required=True,
                           help='Destination name')
 
+    # get file
+    getfile = subparsers.add_parser('get', help='Get a file in the S3Vault',
+                                    parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
+    getfile.add_argument('-s', '--src', dest='src', required=True,
+                         help='Source file to retrieve')
+    getfile.add_argument('-d', '--dest', dest='dest', required=True,
+                         help='Destination name',
+                         type=argparse.FileType('wb'))
+
+    # set property
     setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the S3Vault',
                                         parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
     setproperty.add_argument('-c', '--config', dest='config', required=True,
                              help='Configuration file to manage')
     setproperty.add_argument('-K', '--key', dest='key', required=True,
@@ -91,16 +110,29 @@ def check_args():
                              choices=['int', 'string', 'list', 'dict', 'yaml', 'json'],
                              default='string',
                              help='Data type for the value')
+    # edit property
+    editproperty = subparsers.add_parser('configedit', help='Edit a configuration file in the S3Vault',
+                                         parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
+    editproperty.add_argument('-c', '--config', dest='config', required=True,
+                              help='Configuration file to manage')
+    editproperty.add_argument('-t', '--type', dest='type', required=False,
+                              choices=['yaml', 'json'],
+                              default='yaml',
+                              help='Editor type to use (yaml, json)')
+    # create session
     create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
     """ :type : argparse.ArgumentParser """
     create_session.add_argument('-r', '--role-name', dest='role_name', required=True,
                                 help='Role to assume')
-    create_s3vault_config = subparsers.add_parser('create_s3vault_config', help='Create a new s3vault configuration '
-                                                                                'file')
+    # create s3vaultconfig
+    create_s3vault_config = subparsers.add_parser('create_s3vault_config',
+                                                  help='Create a new s3vault configuration file')
     """ :type : argparse.ArgumentParser """
     create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=True,
                                        type=argparse.FileType('wb'),
                                        help='Config file to create')
+    # cloudformation generate
     cloudformation_generate = subparsers.add_parser('create_cloudformation',
                                                     help='Generate a CloudFormation template from a s3vault '
                                                          'configuration')
@@ -111,7 +143,9 @@ def check_args():
     cloudformation_generate.add_argument('-o', '--output', dest='output_file', required=True,
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
+    # ansible path
     ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
+    """ :type : argparse.ArgumentParser """
     return parser.parse_args()
 
 
@@ -206,6 +240,107 @@ def convert_type(value, value_type):
     return converted_object
 
 
+def command_template(args, conn_manager):
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
+    ansible_env = copy.deepcopy(os.environ)
+    environment = copy.deepcopy(os.environ)
+    args.dest.write(s3vault.render_template(args.template.name,
+                                            ansible_env=ansible_env,
+                                            environment=environment))
+
+
+def command_push(args, conn_manager):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
+    logger.info('Uploading file {s}'.format(s=args.src.name))
+    metadata = s3vault.put_file(src=args.src,
+                                dest=args.dest,
+                                encryption_key_arn=args.kms_arn,
+                                key_alias=args.kms_alias)
+    logger.debug('Metadata: {d}'.format(d=metadata))
+
+
+def command_get(args, conn_manager):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
+    logger.info('Retrieving file {s}'.format(s=args.src))
+    logger.debug('Metadata: {m}'.format(m=s3vault.get_file_metadata(args.src)))
+    args.dest.write(s3vault.get_file(args.src))
+    logger.debug('File successfully created: {d}'.format(d=args.dest.name))
+
+
+def command_configset(args, conn_manager):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
+    metadata = s3vault.set_property(configfile=args.config,
+                                    key=args.key,
+                                    value=convert_type(args.value, args.value_type),
+                                    encryption_key_arn=args.kms_arn,
+                                    key_alias=args.kms_alias)
+    logger.debug('Metadata: {d}'.format(d=metadata))
+
+
+def command_configedit(args, conn_manager):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
+    logger.info('Editing config: {s}'.format(s=args.config))
+    metadata = s3vault.get_file_metadata(args.config)
+    json_data = s3vault.get_file(args.config)
+    try:
+        json.loads(json_data)
+    except ValueError:
+        logger.error('ConfigEdit can only edit json config data')
+        raise
+    attributes = {
+        'bucket': args.bucket,
+        'path': args.path,
+        'config': args.config
+    }
+    editor = Editor(json_data.encode('utf-8'), attributes=attributes, mode=args.type)
+    try:
+        editor.run()
+    except EditorAbortException:
+        logger.warning('Config left unmodified.')
+        return
+    # process the result
+    memoryfile = BytesIO(editor.result)
+    metadata = s3vault.put_file(src=memoryfile,
+                                dest=args.config,
+                                encryption_key_arn=metadata.get('SSEKMSKeyId', ''))
+    logger.info('Config: {c} updated successfully.'.format(c=args.config))
+    logger.debug('Metadata: {m}'.format(m=metadata))
+
+
+def command_createtoken(args):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    external_id = getpass('External ID:')
+    token_factory = TokenFactory(role_name=args.role_name, external_id=external_id)
+    token_factory.generate_token()
+    if token_factory.token:
+        logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
+
+
+def command_createconfig(args):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 's3vault.example.yml'),
+                 args.output_file.name)
+    logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
+
+
+def command_createcloudformation(args):
+    logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
+    s3vault_config = ConfigManager(args.s3vault_config.name).load_config()
+    policy_manager = PolicyManager(s3vault_config)
+    with open(args.output_file.name, 'wb') as cf_file:
+        cf_file.write(policy_manager.generate_cloudformation())
+    logger.info('CloudFormation template generated: {}'.format(args.output_file.name))
+
+
+def command_ansiblepath():
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    print('{}'.format(os.path.join(dirname, 'ansible')))
+
+
 def main():
     """
     Command line tool to use some functionality of the S3Vault
@@ -218,72 +353,37 @@ def main():
     token_factory = TokenFactory()
     conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token)
 
-    if args.command == 'template':
-        try:
-            # expose the environemnt variables in 2 dicts
-            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
-            ansible_env = copy.deepcopy(os.environ)
-            environment = copy.deepcopy(os.environ)
-            args.dest.write(s3vault.render_template(args.template.name,
-                                                    ansible_env=ansible_env,
-                                                    environment=environment))
-        except Exception as e:
-            logger.exception('Error while expanding the template. Exiting')
-            sys.exit(1)
-    elif args.command == 'push':
-        try:
-            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
-            logger.info(args.src.name)
-            metadata = s3vault.put_file(src=args.src.name,
-                                        dest=args.dest,
-                                        encryption_key_arn=args.kms_arn,
-                                        key_alias=args.kms_alias)
-            logger.debug('s3fsobject metadata: {d}'.format(d=metadata))
-        except Exception as e:
-            logger.exception('Error while pushing file. Error: {t} / {e}'.format(t=str(type(e)),
-                                                                                 e=str(e)))
-            sys.exit(1)
-    elif args.command == 'configset':
-        try:
-            s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
-            metadata = s3vault.set_property(configfile=args.config,
-                                            key=args.key,
-                                            value=convert_type(args.value, args.value_type),
-                                            encryption_key_arn=args.kms_arn,
-                                            key_alias=args.kms_alias)
-            logger.debug('s3fsobject metadata: {d}'.format(d=metadata))
-        except Exception as e:
-            logger.exception('Error while setting property. Error: {t} / {e}'.format(t=str(type(e)),
-                                                                                     e=str(e)))
-    elif args.command == 'create_session':
-        try:
-            external_id = getpass('External ID:')
-            token_factory = TokenFactory(role_name=args.role_name, external_id=external_id)
-            token_factory.generate_token()
-        except Exception as e:
-            logger.exception('Error while setting the token. Type: {t}. Error: {e}'.format(t=str(type(e)), e=str(e)))
-            sys.exit(1)
-        if token_factory.token:
-            logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
-    elif args.command == 'create_s3vault_config':
-        shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 's3vault.example.yml'),
-                     args.output_file.name)
-        logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
-    elif args.command == 'create_cloudformation':
-        try:
-            s3vault_config = ConfigManager(args.s3vault_config.name).load_config()
-            policy_manager = PolicyManager(s3vault_config)
-            with open(args.output_file.name, 'wb') as cf_file:
-                cf_file.write(policy_manager.generate_cloudformation())
-        except Exception as e:
-            logger.exception('Exception while generating CloudFormation.')
-            sys.exit(1)
-        logger.info('CloudFormation template generated: {}'.format(args.output_file.name))
-    elif args.command == 'ansible_path':
-        dirname = os.path.dirname(os.path.abspath(__file__))
-        print('{}'.format(os.path.join(dirname, 'ansible')))
-    else:
-        logger.error('Command not available')
+    exception_message = 'Unknown exception.'
+    try:
+        if args.command == 'template':
+            exception_message = 'Error while expanding the template.'
+            command_template(args, conn_manager)
+        elif args.command == 'push':
+            exception_message = 'Error while pushing file.'
+            command_push(args, conn_manager)
+        elif args.command == 'get':
+            exception_message = 'Error while getting file.'
+            command_get(args, conn_manager)
+        elif args.command == 'configset':
+            exception_message = 'Error while setting property.'
+            command_configset(args, conn_manager)
+        elif args.command == 'configedit':
+            exception_message = 'Error while editing configuration.'
+            command_configedit(args, conn_manager)
+        elif args.command == 'create_session':
+            exception_message = 'Error while setting the token.'
+            command_createtoken(args)
+        elif args.command == 'create_s3vault_config':
+            exception_message = 'Error while creating s3vault config example.'
+            command_createconfig(args)
+        elif args.command == 'create_cloudformation':
+            exception_message = 'Exception while generating CloudFormation.'
+            command_createcloudformation(args)
+        elif args.command == 'ansible_path':
+            exception_message = 'Error while retrieving ansible path'
+            command_ansiblepath()
+    except Exception as e:
+        logger.exception('{m}. Error: {t} / {e}'.format(m=exception_message, t=str(type(e)), e=str(e)))
         sys.exit(1)
 
 

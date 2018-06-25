@@ -42,7 +42,7 @@ class ConnectionFactory(object):
 
         session_params = {'profile_name': profile}
         if token:
-            self.logger.info('Connection will use session token: {f}'.format(f=TokenFactory.TOKEN_FILENAME))
+            self.logger.debug('Connection will use session token: {f}'.format(f=TokenFactory.TOKEN_FILENAME))
             session_params = {'aws_access_key_id': token['AccessKeyId'],
                               'aws_secret_access_key': token['SecretAccessKey'],
                               'aws_session_token': token['SessionToken']
