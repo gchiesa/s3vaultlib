@@ -11,5 +11,5 @@ PyYAML==3.12
 pytest==3.2.1
 pytest-runner==2.11.1
 twine==1.10.0
-ansible==2.4.0.0
+ansible==2.6.1
 awscli==1.14.56
