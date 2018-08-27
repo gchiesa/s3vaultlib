@@ -1,0 +1,21 @@
+---
+s3vaultlib:
+  vault:
+    bucket: "my_bucket_example"
+  roles:
+    - name:
+      privileges: [read, write]
+      path: _all_
+      managed_policies:
+        - managed_policy1
+    - name: webserver
+      privileges: [read]
+      kms_alias: webserver
+      path:
+        - webserver/
+    - name: mysql_instance
+      privileges: [read]
+      kms_alias: mysql_instance
+      path:
+      - mysql_instance/
+      kms_arn: arn::123:456:arntest

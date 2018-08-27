@@ -6,11 +6,10 @@ include README.rst
 include requirements.txt
 
 recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
-recursive-include s3vaultlib/ansible *
-recursive-include s3vaultlib/templates *
-recursive-include s3vaultlib/resources *
+recursive-include s3vaultlib *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
 

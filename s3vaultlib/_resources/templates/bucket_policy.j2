@@ -1,0 +1,96 @@
+"BucketPolicy{{ vault.bucket|cfsanitize|title }}" : {
+  "DependsOn": [
+    {% for keydep in vault.roles if 'write' not in keydep.privileges %}
+    "KMSKey{{ keydep.name|cfsanitize|title }}"{{ ',' if not loop.last }}
+    {% endfor %}
+  ],
+  "Type" : "AWS::S3::BucketPolicy",
+  "Properties" : {
+    "Bucket" : "{{ vault.bucket }}",
+        "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Id": "S3VaultBucket{{ vault.bucket|cfsanitize }}",
+        "Statement": [
+        {%  if vault.path_all %}
+            {
+                "Sid": "DenyUnEncryptedObjectUploads",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": [
+                    {%  for path in vault.path_all %}
+                    "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
+                    {%  endfor %}
+                ],
+                "Condition": {
+                    "StringNotEquals": {
+                        "s3:x-amz-server-side-encryption": "aws:kms"
+                    }
+                }
+            },
+        {% endif %}
+        {%  for role in vault.roles if 'write' not in role.privileges %}
+            {
+                "Sid": "DenyEncryptedObjectWithDefaultKMS{{ role.name|cfsanitize }}",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": [
+                    {%  for path in role.path %}
+                    "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
+                    {% endfor %}
+                ],
+                "Condition": {
+                    "StringNotEquals": {
+                        "s3:x-amz-server-side-encryption-aws-kms-key-id": { "Fn::GetAtt": [ "KMSKey{{ role.name|cfsanitize|title }}", "Arn" ] }
+                    }
+                }
+            },
+        {%  endfor %}
+            {
+                "Sid": "DenyAnyActionIfNotUsingSecureTransport",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "*",
+                "Resource": "arn:aws:s3:::{{ vault.bucket }}/*",
+                "Condition": {
+                    "Bool": {
+                        "aws:SecureTransport": "false"
+                    }
+                }
+            },
+            {
+                "Sid": "DenyAnyoneToChangeACLtoObject",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObjectACL",
+                "Resource": "arn:aws:s3:::{{ vault.bucket }}/*"
+            },
+            {
+                "Sid": "DenyIncorrectEncryptionHeader",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::{{ vault.bucket }}/*",
+                "Condition": {
+                    "StringNotEquals": {
+                        "s3:x-amz-server-side-encryption": "aws:kms"
+                    }
+                }
+            },
+            {
+                "Sid": "DenyUnEncryptedObjectUploads",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::{{ vault.bucket }}/*",
+                "Condition": {
+                    "Null": {
+                        "s3:x-amz-server-side-encryption": "true"
+                    }
+                }
+            }
+        ]
+    }
+  }
+}

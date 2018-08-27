@@ -1,0 +1,497 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS CloudFormation for S3VaultLib",
+    "Parameters": {},
+    "Resources": {
+        "S3VRoleAdminrole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": [
+                                        "arn:aws:iam::${a}:root",
+                                        {
+                                            "a": {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowListKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:List*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*",
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowGetKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:Get*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*",
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowWriteKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:Put*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*",
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "RoleName": "admin_role",
+                "ManagedPolicyArns": [
+                    {
+                        "Fn::ImportValue": "managed_policy1"
+                    }
+                ]
+            }
+        },
+        "S3VRoleWebserver": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": [
+                                        "arn:aws:iam::${a}:root",
+                                        {
+                                            "a": {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowListKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:List*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowGetKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:Get*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "RoleName": "webserver"
+            }
+        },
+        "S3VRoleMysqlinstance": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": {
+                                    "Fn::Sub": [
+                                        "arn:aws:iam::${a}:root",
+                                        {
+                                            "a": {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowListKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:List*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ]
+                        },
+                        {
+                            "Sid": "AllowGetKeyMaterialsArtifacts",
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:Get*"
+                            ],
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "RoleName": "mysql_instance"
+            }
+        },
+        "KMSKeyWebserver": {
+            "DependsOn": [
+                "S3VRoleWebserver",
+                "S3VRoleAdminrole"
+            ],
+            "DeletionPolicy": "Retain",
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "Key used from role webserver",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Id": "KEY-POLICY",
+                    "Statement": [
+                        {
+                            "Sid": "Allow administration of the key",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::Sub": [
+                                            "arn:aws:iam::${a}:root",
+                                            {
+                                                "a": {
+                                                    "Ref": "AWS::AccountId"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Create*",
+                                "kms:Describe*",
+                                "kms:Enable*",
+                                "kms:List*",
+                                "kms:Put*",
+                                "kms:Update*",
+                                "kms:Revoke*",
+                                "kms:Disable*",
+                                "kms:Get*",
+                                "kms:Delete*",
+                                "kms:ScheduleKeyDeletion",
+                                "kms:CancelKeyDeletion"
+                            ],
+                            "Resource": "*"
+                        },
+                        {
+                            "Sid": "Allow use of the key for encryption and decryption",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "S3VRoleAdminrole",
+                                            "Arn"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Decrypt",
+                                "kms:DescribeKey",
+                                "kms:Encrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*"
+                            ],
+                            "Resource": "*"
+                        },
+                        {
+                            "Sid": "Allow use of the key for decryption only",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "S3VRoleWebserver",
+                                            "Arn"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Decrypt",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        },
+        "KMSKeyAliasWebserver": {
+            "Type": "AWS::KMS::Alias",
+            "Properties": {
+                "AliasName": "alias/webserver",
+                "TargetKeyId": {
+                    "Ref": "KMSKeyWebserver"
+                }
+            }
+        },
+        "KMSKeyMysqlinstance": {
+            "DependsOn": [
+                "S3VRoleMysqlinstance",
+                "S3VRoleAdminrole"
+            ],
+            "DeletionPolicy": "Retain",
+            "Type": "AWS::KMS::Key",
+            "Properties": {
+                "Description": "Key used from role mysql_instance",
+                "KeyPolicy": {
+                    "Version": "2012-10-17",
+                    "Id": "KEY-POLICY",
+                    "Statement": [
+                        {
+                            "Sid": "Allow administration of the key",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::Sub": [
+                                            "arn:aws:iam::${a}:root",
+                                            {
+                                                "a": {
+                                                    "Ref": "AWS::AccountId"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Create*",
+                                "kms:Describe*",
+                                "kms:Enable*",
+                                "kms:List*",
+                                "kms:Put*",
+                                "kms:Update*",
+                                "kms:Revoke*",
+                                "kms:Disable*",
+                                "kms:Get*",
+                                "kms:Delete*",
+                                "kms:ScheduleKeyDeletion",
+                                "kms:CancelKeyDeletion"
+                            ],
+                            "Resource": "*"
+                        },
+                        {
+                            "Sid": "Allow use of the key for encryption and decryption",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "S3VRoleAdminrole",
+                                            "Arn"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Decrypt",
+                                "kms:DescribeKey",
+                                "kms:Encrypt",
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*"
+                            ],
+                            "Resource": "*"
+                        },
+                        {
+                            "Sid": "Allow use of the key for decryption only",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    {
+                                        "Fn::GetAtt": [
+                                            "S3VRoleMysqlinstance",
+                                            "Arn"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "kms:Decrypt",
+                                "kms:DescribeKey"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        },
+        "KMSKeyAliasMysqlinstance": {
+            "Type": "AWS::KMS::Alias",
+            "Properties": {
+                "AliasName": "alias/mysql_instance",
+                "TargetKeyId": {
+                    "Ref": "KMSKeyMysqlinstance"
+                }
+            }
+        },
+        "BucketPolicyMybucketexample": {
+            "DependsOn": [
+                "KMSKeyWebserver",
+                "KMSKeyMysqlinstance"
+            ],
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": "my_bucket_example",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Id": "S3VaultBucketMyBucketExample",
+                    "Statement": [
+                        {
+                            "Sid": "DenyUnEncryptedObjectUploads",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObject",
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*",
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ],
+                            "Condition": {
+                                "StringNotEquals": {
+                                    "s3:x-amz-server-side-encryption": "aws:kms"
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "DenyEncryptedObjectWithDefaultKMSwebserver",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObject",
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/webserver/*"
+                            ],
+                            "Condition": {
+                                "StringNotEquals": {
+                                    "s3:x-amz-server-side-encryption-aws-kms-key-id": {
+                                        "Fn::GetAtt": [
+                                            "KMSKeyWebserver",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "DenyEncryptedObjectWithDefaultKMSMysqlInstance",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObject",
+                            "Resource": [
+                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                            ],
+                            "Condition": {
+                                "StringNotEquals": {
+                                    "s3:x-amz-server-side-encryption-aws-kms-key-id": {
+                                        "Fn::GetAtt": [
+                                            "KMSKeyMysqlinstance",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "DenyAnyActionIfNotUsingSecureTransport",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "*",
+                            "Resource": "arn:aws:s3:::my_bucket_example/*",
+                            "Condition": {
+                                "Bool": {
+                                    "aws:SecureTransport": "false"
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "DenyAnyoneToChangeACLtoObject",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObjectACL",
+                            "Resource": "arn:aws:s3:::my_bucket_example/*"
+                        },
+                        {
+                            "Sid": "DenyIncorrectEncryptionHeader",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObject",
+                            "Resource": "arn:aws:s3:::my_bucket_example/*",
+                            "Condition": {
+                                "StringNotEquals": {
+                                    "s3:x-amz-server-side-encryption": "aws:kms"
+                                }
+                            }
+                        },
+                        {
+                            "Sid": "DenyUnEncryptedObjectUploads",
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Action": "s3:PutObject",
+                            "Resource": "arn:aws:s3:::my_bucket_example/*",
+                            "Condition": {
+                                "Null": {
+                                    "s3:x-amz-server-side-encryption": "true"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "Outputs": {}
+}

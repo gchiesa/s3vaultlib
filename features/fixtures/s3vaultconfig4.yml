@@ -1,0 +1,5 @@
+---
+s3vaultlib:
+  vault:
+    bucket: "my_bucket_example"
+  roles:
