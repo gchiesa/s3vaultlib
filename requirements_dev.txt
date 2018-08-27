@@ -17,6 +17,6 @@ pytest-html
 tox-pyenv
 moto
 behave
-PyHamcrest
+PyHamcrest==1.9.0
 cfn-lint
 boto3<1.8.0
