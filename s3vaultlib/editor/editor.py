@@ -103,10 +103,23 @@ class Editor(object):
         #         buff.start_completion(select_first=False)
         # return self._bindings
 
+    @staticmethod
+    def extract_tokens(data, result_list):
+        if isinstance(data, dict):
+            for item in data.values():
+                Editor.extract_tokens(item, result_list)
+            result_list.extend(data.keys())
+        elif isinstance(data, list) or isinstance(data, tuple):
+            for item in data:
+                Editor.extract_tokens(item, result_list)
+
     @property
     def completer(self):
-        tokens = [t.decode('utf-8') for t in set(re.compile('\w+').findall(self._data))]
-        return WordCompleter(tokens, sentence=True)
+        tokens = []
+        self.extract_tokens(self._data, tokens)
+        # create a sorted set
+        keywords = set(sorted(tokens))
+        return WordCompleter(keywords, sentence=True)
 
     def bottom_bar(self):
         data = [
