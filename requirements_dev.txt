@@ -11,7 +11,7 @@ PyYAML==3.12
 pytest==3.2.1
 pytest-runner==2.11.1
 twine==1.10.0
-awscli
+awscli==1.16.3
 pytest-mock
 pytest-html
 tox-pyenv
