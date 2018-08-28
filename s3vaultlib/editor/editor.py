@@ -118,7 +118,7 @@ class Editor(object):
         tokens = []
         self.extract_tokens(self._data, tokens)
         # create a sorted set
-        keywords = set(sorted(tokens))
+        keywords = sorted(list(set(tokens)))
         return WordCompleter(keywords, sentence=True)
 
     def bottom_bar(self):
@@ -169,8 +169,6 @@ class Editor(object):
 
     def run(self):
         self._load_key_bindings()
-        tokens = [t.decode('utf-8') for t in set(re.compile('\w+').findall(self._data))]
-        completer = WordCompleter(tokens)
         style = style_from_pygments_cls(get_style_by_name(DEFAULT_STYLE))
         session = PromptSession(multiline=True,
                                 lexer=PygmentsLexer(self.lexer_class),
@@ -181,7 +179,7 @@ class Editor(object):
                                 include_default_pygments_style=False,
                                 validate_while_typing=True,
                                 key_bindings=self._bindings,
-                                completer=completer,
+                                completer=self.completer,
                                 complete_while_typing=True
                                 )
         try:
