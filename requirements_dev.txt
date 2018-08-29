@@ -15,7 +15,7 @@ awscli
 pytest-mock
 pytest-html
 tox-pyenv
-moto
+moto==1.3.5
 behave
 PyHamcrest
 cfn-lint
