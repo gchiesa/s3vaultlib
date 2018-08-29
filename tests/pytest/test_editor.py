@@ -52,3 +52,16 @@ def test_extract_tokens_are_sorted():
     Editor.extract_tokens(fixture, tokens)
     tokens = sorted(list(set(tokens)))
     assert tokens == ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+
+
+def test_extract_token_single_level_dict():
+    fixture = {
+        "username": "v_username",
+        "password": "v_password",
+        "hostname": "v_hostname"
+    }
+    tokens = []
+    Editor.extract_tokens(fixture, tokens)
+    tokens = sorted(list(set(tokens)))
+    assert tokens == ['hostname', 'password', 'username']
+

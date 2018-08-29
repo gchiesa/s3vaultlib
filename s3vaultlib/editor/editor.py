@@ -17,7 +17,7 @@ from prompt_toolkit.validation import Validator, ValidationError
 from pygments.lexers.data import YamlLexer, JsonLexer
 from pygments.styles import get_style_by_name
 from yaml.loader import ParserError
-
+from prompt_toolkit.auto_suggest import DynamicAutoSuggest, AutoSuggest, Suggestion
 from .. import __application__
 
 __author__ = "Giuseppe Chiesa"
@@ -51,6 +51,34 @@ class YAMLValidator(Validator):
             raise ValidationError(message=str(e.problem).decode('utf-8'), cursor_position=e.problem_mark.index)
         except Exception:
             raise
+
+
+class AutosuggestFromDocumentData(AutoSuggest):
+    def __init__(self, *args, **kwargs):
+        super(AutosuggestFromDocumentData, self).__init__(*args, **kwargs)
+        self._last_valid_document_data = None
+
+    def _save_last_valid_document_data(self, data):
+        try:
+            json.loads(data)
+            self._last_valid_document_data = data
+        except ValueError:
+            pass
+
+    def _tokenize(self, data):
+        tokens = []
+        Editor.extract_tokens(json.loads(data), tokens)
+        return sorted(list(set(tokens)))
+
+    def get_suggestion(self, buffer, document):
+        self._save_last_valid_document_data(document.text)
+        if not self._last_valid_document_data:
+            return None
+        tokens = self._tokenize(self._last_valid_document_data)
+        last_word = document.get_word_before_cursor()
+        for t in tokens:
+            if t.startswith(last_word):
+                return Suggestion(t)
 
 
 class EditorException(Exception):
@@ -116,7 +144,7 @@ class Editor(object):
     @property
     def completer(self):
         tokens = []
-        self.extract_tokens(self._data, tokens)
+        self.extract_tokens(json.loads(self._data), tokens)
         # create a sorted set
         keywords = sorted(list(set(tokens)))
         return WordCompleter(keywords, sentence=True)
@@ -179,8 +207,9 @@ class Editor(object):
                                 include_default_pygments_style=False,
                                 validate_while_typing=True,
                                 key_bindings=self._bindings,
-                                completer=self.completer,
-                                complete_while_typing=True
+                                # completer=self.completer,
+                                auto_suggest=AutosuggestFromDocumentData(),
+                                complete_while_typing=True,
                                 )
         try:
             result = session.prompt('', default=six.text_type(self.data))
