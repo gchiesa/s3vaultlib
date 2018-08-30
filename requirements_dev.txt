@@ -19,4 +19,4 @@ moto
 behave
 PyHamcrest
 cfn-lint
-boto3<1.8.0
+boto3==1.8.5
