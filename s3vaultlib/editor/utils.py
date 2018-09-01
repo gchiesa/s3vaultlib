@@ -57,12 +57,12 @@ def json_fixer(json_data):
 def yaml_fixer(yaml_data):
     to_fix = yaml_data.strip()
     result = ''
+    error_pos = 0
     try:
         result = yaml.load(to_fix)
         return result
     except (ParserError, ScannerError) as e:
-        pass
-    error_pos = e.problem_mark.index
+        error_pos = e.problem_mark.index
     # search the last newline
     last_valid_position = to_fix[:error_pos].rfind('\n')
     valid_chunk = to_fix[:last_valid_position]
