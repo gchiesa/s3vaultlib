@@ -4,20 +4,21 @@ from __future__ import unicode_literals
 import cgi
 import json
 import logging
-import re
+import sys
 
 import six
 import yaml
 from prompt_toolkit import PromptSession, HTML
-from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
-from prompt_toolkit.validation import Validator, ValidationError
 from pygments.lexers.data import YamlLexer, JsonLexer
 from pygments.styles import get_style_by_name
 from yaml.loader import ParserError
-from prompt_toolkit.auto_suggest import DynamicAutoSuggest, AutoSuggest, Suggestion
+
+from .completers import CompleteFromDocumentKeys
+from .validators import YAMLValidator, JSONValidator
+from .autosuggestions import AutosuggestFromDocumentData
 from .. import __application__
 
 __author__ = "Giuseppe Chiesa"
@@ -29,56 +30,6 @@ __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
 
 DEFAULT_STYLE = 'native'
-
-
-class JSONValidator(Validator):
-    def validate(self, document):
-        try:
-            json.loads(document.text)
-        except ValueError as e:
-            matches = re.compile('.*\(char\s(\d+).*').findall(e.message)
-            position = int(matches[0]) if matches else 0
-            raise ValidationError(message=str(e).decode('utf-8'), cursor_position=int(position))
-        except Exception:
-            raise
-
-
-class YAMLValidator(Validator):
-    def validate(self, document):
-        try:
-            yaml.load(document.text)
-        except ParserError as e:
-            raise ValidationError(message=str(e.problem).decode('utf-8'), cursor_position=e.problem_mark.index)
-        except Exception:
-            raise
-
-
-class AutosuggestFromDocumentData(AutoSuggest):
-    def __init__(self, *args, **kwargs):
-        super(AutosuggestFromDocumentData, self).__init__(*args, **kwargs)
-        self._last_valid_document_data = None
-
-    def _save_last_valid_document_data(self, data):
-        try:
-            json.loads(data)
-            self._last_valid_document_data = data
-        except ValueError:
-            pass
-
-    def _tokenize(self, data):
-        tokens = []
-        Editor.extract_tokens(json.loads(data), tokens)
-        return sorted(list(set(tokens)))
-
-    def get_suggestion(self, buffer, document):
-        self._save_last_valid_document_data(document.text)
-        if not self._last_valid_document_data:
-            return None
-        tokens = self._tokenize(self._last_valid_document_data)
-        last_word = document.get_word_before_cursor()
-        for t in tokens:
-            if t.startswith(last_word):
-                return Suggestion(t)
 
 
 class EditorException(Exception):
@@ -131,24 +82,6 @@ class Editor(object):
         #         buff.start_completion(select_first=False)
         # return self._bindings
 
-    @staticmethod
-    def extract_tokens(data, result_list):
-        if isinstance(data, dict):
-            for item in data.values():
-                Editor.extract_tokens(item, result_list)
-            result_list.extend(data.keys())
-        elif isinstance(data, list) or isinstance(data, tuple):
-            for item in data:
-                Editor.extract_tokens(item, result_list)
-
-    @property
-    def completer(self):
-        tokens = []
-        self.extract_tokens(json.loads(self._data), tokens)
-        # create a sorted set
-        keywords = sorted(list(set(tokens)))
-        return WordCompleter(keywords, sentence=True)
-
     def bottom_bar(self):
         data = [
             '<b>{}</b>'.format(cgi.escape('<ESC> + <Enter> to save and exit')),
@@ -160,6 +93,8 @@ class Editor(object):
             data += ['<b>Bucket</b>: {}'.format(cgi.escape(self._attributes['bucket']))]
         if self._attributes.get('path', None):
             data += ['<b>Path</b>: {}'.format(cgi.escape(self._attributes['path']))]
+        if self._attributes.get('debug', None):
+            data += ['<b>Debug</b>: {}'.format(cgi.escape(self._attributes['debug']))]
         text = ' - '.join(data)
         return HTML(text.decode('utf-8'))
 
@@ -201,14 +136,15 @@ class Editor(object):
         session = PromptSession(multiline=True,
                                 lexer=PygmentsLexer(self.lexer_class),
                                 validator=self.validator_class(),
-                                bottom_toolbar=self.bottom_bar(),
-                                mouse_support=True,
+                                bottom_toolbar=self.bottom_bar,
+                                mouse_support=False,
                                 style=style,
                                 include_default_pygments_style=False,
                                 validate_while_typing=True,
                                 key_bindings=self._bindings,
-                                # completer=self.completer,
-                                auto_suggest=AutosuggestFromDocumentData(),
+                                completer=CompleteFromDocumentKeys(bottom_toolbar_attributes=self._attributes,
+                                                                   mode=self._mode),
+                                # auto_suggest=AutosuggestFromDocumentData(bottom_toolbar_attributes=self._attributes),
                                 complete_while_typing=True,
                                 )
         try:
@@ -223,3 +159,14 @@ class Editor(object):
         if self._result:
             return json.dumps(self._result)
         return ''
+
+
+if __name__ == '__main__':
+    # edit a file
+    filename = sys.argv[1]
+    with open(filename, 'rb') as fh:
+        data = fh.read()
+
+    editor = Editor(data, attributes={'debug': 'enabled'}, mode=sys.argv[2])
+    editor.run()
+    print('Result:\n---\n{}'.format(editor.result))
