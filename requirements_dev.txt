@@ -11,11 +11,11 @@ PyYAML==3.13
 pytest==3.7.4
 pytest-runner==4.2
 twine==1.11.0
-awscli
+awscli==1.16.6
 pytest-mock
 pytest-html
 tox-pyenv
-moto
+moto==1.3.4
 behave
 PyHamcrest
 cfn-lint
