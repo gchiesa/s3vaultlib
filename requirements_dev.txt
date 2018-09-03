@@ -16,6 +16,6 @@ pytest-mock
 pytest-html
 tox-pyenv
 moto
-behave
+behave==1.2.6
 PyHamcrest
 cfn-lint
