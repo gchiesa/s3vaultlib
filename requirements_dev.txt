@@ -14,7 +14,7 @@ twine==1.11.0
 awscli
 pytest-mock
 pytest-html
-tox-pyenv
+tox-pyenv==1.1.0
 moto
 behave
 PyHamcrest
