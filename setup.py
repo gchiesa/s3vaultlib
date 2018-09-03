@@ -27,7 +27,7 @@ test_requirements = [
 
 setup(
     name=__application__,
-    version='2.0.3',
+    version='2.0.4',
     description="Python library to expose S3 as vault to store encrypted data",
     long_description=readme + '\n\n' + history,
     author="Giuseppe Chiesa",
