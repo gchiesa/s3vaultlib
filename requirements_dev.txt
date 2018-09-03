@@ -12,7 +12,7 @@ pytest==3.7.4
 pytest-runner==4.2
 twine==1.11.0
 awscli
-pytest-mock
+pytest-mock==1.10.0
 pytest-html
 tox-pyenv
 moto
