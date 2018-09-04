@@ -5,7 +5,7 @@ S3Vault Library
 .. image:: https://img.shields.io/pypi/v/s3vaultlib.svg
         :target: https://pypi.python.org/pypi/s3vaultlib
 
-.. image:: https://api.travis-ci.org/gchiesa/s3vaultlib.svg
+.. image:: https://travis-ci.org/gchiesa/s3vaultlib.svg?branch=master
         :target: https://travis-ci.org/gchiesa/s3vaultlib
 
 .. image:: https://readthedocs.org/projects/s3vaultlib/badge/?version=latest
