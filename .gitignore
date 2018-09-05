@@ -69,3 +69,6 @@ target/
 
 # tox
 test_report.html
+
+# pytest
+.pytest_cache/
