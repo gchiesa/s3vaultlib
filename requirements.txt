@@ -10,4 +10,4 @@ python-string-utils==0.6.0
 dpath==1.4.2
 prompt-toolkit==2.0.4
 Pygments==2.2.0
-ansible>=2.4.0.0,<2.7
+ansible>=2.4.0.0,<2.6
