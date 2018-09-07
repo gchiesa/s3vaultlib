@@ -8,6 +8,9 @@ S3Vault Library
 .. image:: https://travis-ci.org/gchiesa/s3vaultlib.svg?branch=master
         :target: https://travis-ci.org/gchiesa/s3vaultlib
 
+.. image:: https://api.codacy.com/project/badge/Grade/902b192986194c1c9ec3f385e4db31c0
+        :target: https://www.codacy.com/app/peppechiesa/s3vaultlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gchiesa/s3vaultlib&amp;utm_campaign=Badge_Grade
+
 .. image:: https://readthedocs.org/projects/s3vaultlib/badge/?version=latest
         :target: https://s3vaultlib.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
