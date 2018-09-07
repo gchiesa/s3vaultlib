@@ -190,7 +190,7 @@ def load_from_yaml(filename):
     if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
         raise Exception('Unable to read file: {}'.format(filename))
     with open(filename, 'r') as fh:
-        data = yaml.load(fh)
+        data = yaml.safe_load(fh)
     return data
 
 

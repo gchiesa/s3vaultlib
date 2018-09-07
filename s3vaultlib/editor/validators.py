@@ -32,7 +32,7 @@ class JSONValidator(Validator):
 class YAMLValidator(Validator):
     def validate(self, document):
         try:
-            yaml.load(document.text)
+            yaml.safe_load(document.text)
         except (ParserError, ScannerError) as e:
             raise ValidationError(message=str(e.problem).decode('utf-8'), cursor_position=e.problem_mark.index)
         except Exception:

@@ -59,7 +59,7 @@ def yaml_fixer(yaml_data):
     result = ''
     error_pos = 0
     try:
-        result = yaml.load(to_fix)
+        result = yaml.safe_load(to_fix)
         return result
     except (ParserError, ScannerError) as e:
         error_pos = e.problem_mark.index
@@ -67,8 +67,8 @@ def yaml_fixer(yaml_data):
     last_valid_position = to_fix[:error_pos].rfind('\n')
     valid_chunk = to_fix[:last_valid_position]
     try:
-        return yaml.load(valid_chunk)
+        return yaml.safe_load(valid_chunk)
     except (ParserError, ScannerError):
         pass
-    return yaml.load(result)
+    return yaml.safe_load(result)
 
