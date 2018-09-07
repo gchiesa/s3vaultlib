@@ -1,6 +1,10 @@
 S3Vault Library
 ===============
 
+.. image:: https://api.codacy.com/project/badge/Grade/d5d5846dcf41421a9c7165ee81505472
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/peppechiesa/s3vaultlib?utm_source=github.com&utm_medium=referral&utm_content=gchiesa/s3vaultlib&utm_campaign=Badge_Grade_Dashboard
+
 
 .. image:: https://img.shields.io/pypi/v/s3vaultlib.svg
         :target: https://pypi.python.org/pypi/s3vaultlib
