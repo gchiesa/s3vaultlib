@@ -37,7 +37,7 @@ class PolicyManager(object):
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._config_manager = config_manager  # type: ConfigManager
         self._j2env = Environment(loader=FileSystemLoader(os.path.join(BASE_PATH, '_resources', 'templates')),
-                                  trim_blocks=True)
+                                  trim_blocks=True, autoescape=False)
         self._j2env.filters['cfsanitize'] = cloudformation_sanitize_string
         self._policy_variables = None
         self._connection_factory = None
