@@ -8,6 +8,6 @@ six>=1.11.0
 PyYAML>=3.10,<=3.13
 python-string-utils==0.6.0
 dpath==1.4.2
-prompt-toolkit==2.0.5
+prompt-toolkit==2.0.6
 Pygments==2.2.0
 ansible>=2.4.0.0,<2.6
