@@ -25,7 +25,7 @@ class TemplateRenderer(object):
         :type s3fs: S3Fs
         """
         self._template_file = template_file
-        self._jinja2 = jinja2.Environment(trim_blocks=True, autoescape=True)
+        self._jinja2 = jinja2.Environment(trim_blocks=True, autoescape=False)
         # load additional ansible filters
         self._jinja2.filters.update(FilterModule().filters())
         self._s3fs = s3fs
