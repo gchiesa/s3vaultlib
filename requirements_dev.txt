@@ -19,5 +19,5 @@ tox-pyenv
 moto==1.3.4
 behave
 PyHamcrest
-cfn-lint
+cfn-lint==0.9.1
 
