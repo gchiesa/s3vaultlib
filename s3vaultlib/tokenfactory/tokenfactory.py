@@ -45,8 +45,12 @@ class TokenFactory(object):
 
     def _get_role_arn(self):
         ec2_metadata = EC2Metadata()
+        if not self._role_name:
+            role_name = EC2Metadata.role
+        else:
+            role_name = self._role_name
         return 'arn:aws:iam::{account_id}:role/{role_name}'.format(account_id=ec2_metadata.account_id,
-                                                                   role_name=self._role_name)
+                                                                   role_name=role_name)
 
     def generate_token(self):
         client = boto3.client('sts')
