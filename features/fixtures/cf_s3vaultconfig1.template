@@ -181,10 +181,6 @@
             }
         },
         "KMSKeyWebserver": {
-            "DependsOn": [
-                "S3VRoleWebserver",
-                "S3VRoleAdminrole"
-            ],
             "DeletionPolicy": "Retain",
             "Type": "AWS::KMS::Key",
             "Properties": {
@@ -281,10 +277,6 @@
             }
         },
         "KMSKeyMysqlinstance": {
-            "DependsOn": [
-                "S3VRoleMysqlinstance",
-                "S3VRoleAdminrole"
-            ],
             "DeletionPolicy": "Retain",
             "Type": "AWS::KMS::Key",
             "Properties": {
@@ -381,10 +373,6 @@
             }
         },
         "BucketPolicyMybucketexample": {
-            "DependsOn": [
-                "KMSKeyWebserver",
-                "KMSKeyMysqlinstance"
-            ],
             "Type": "AWS::S3::BucketPolicy",
             "Properties": {
                 "Bucket": "my_bucket_example",
