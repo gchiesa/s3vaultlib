@@ -1,9 +1,4 @@
 "BucketPolicy{{ vault.bucket|cfsanitize|title }}" : {
-  "DependsOn": [
-    {% for keydep in vault.roles if 'write' not in keydep.privileges %}
-    "KMSKey{{ keydep.name|cfsanitize|title }}"{{ ',' if not loop.last }}
-    {% endfor %}
-  ],
   "Type" : "AWS::S3::BucketPolicy",
   "Properties" : {
     "Bucket" : "{{ vault.bucket }}",

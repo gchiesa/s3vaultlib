@@ -1,11 +1,5 @@
 {% for role in vault.roles if 'write' not in role.privileges %}
 "KMSKey{{ role.name|cfsanitize|title }}": {
-    "DependsOn": [
-        "S3VRole{{ role.name|cfsanitize|title }}",
-        {%  for dep in vault.roles if 'write' in dep.privileges %}
-        "S3VRole{{ dep.name|cfsanitize|title }}"{{ ',' if not loop.last }}
-        {% endfor %}
-    ],
     "DeletionPolicy": "Retain",
     "Type": "AWS::KMS::Key",
     "Properties": {

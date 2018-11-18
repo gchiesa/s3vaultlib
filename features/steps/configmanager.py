@@ -39,3 +39,10 @@ def step_impl(context, role_name, key_name, key_value):
 def step_impl(context, exception_type, match):
     assert_that(context.exception, instance_of(ConfigException))
     assert_that(str(context.exception), contains_string(match))
+
+
+@then('configmanager has the {role_name} with the {key_name} not containing {key_value}')
+def step_impl(context, role_name, key_name, key_value):
+    r = next((r for r in context.config_manager.roles if r.name == role_name), None)
+    assert_that(r, not_none())
+    assert_that(key_value, not_(is_in(getattr(r, key_name, None))))
