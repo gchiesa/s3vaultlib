@@ -60,7 +60,7 @@ class MessageDialog(object):
         def set_done():
             self.future.set_result(None)
 
-        ok_button = Button(text='OK', handler=(lambda: set_done()))
+        ok_button = Button(text='OK', handler=set_done())
 
         self.dialog = Dialog(
             title=title,
@@ -117,11 +117,12 @@ class Editor(object):
     def _show_message(self, application, title, text):
         def coroutine():
             dialog = MessageDialog(title, text)
-            yield From(self.show_dialog_as_float(application, dialog))
+            yield From(self._show_dialog_as_float(application, dialog))
 
         ensure_future(coroutine())
 
-    def show_dialog_as_float(self, application, dialog):
+    @staticmethod
+    def _show_dialog_as_float(application, dialog):
         """
         Coroutine
         :param application:
