@@ -89,4 +89,5 @@ class PolicyManager(object):
                          bucket_policy=self._generate_bucket_policy(),
                          kms=self._generate_kms())
         rendered = template.render(variables)
+        self.logger.debug('generated code: \n{}'.format(rendered))
         return cloudformation_prettyprint(rendered)

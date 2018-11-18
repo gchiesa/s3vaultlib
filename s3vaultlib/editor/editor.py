@@ -9,16 +9,19 @@ import sys
 import six
 import yaml
 from prompt_toolkit import PromptSession, HTML
+from prompt_toolkit.eventloop import Future, ensure_future, Return, From
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.containers import Float, HSplit
+from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
+from prompt_toolkit.widgets import Dialog, Button, TextArea
 from pygments.lexers.data import YamlLexer, JsonLexer
 from pygments.styles import get_style_by_name
 from yaml.loader import ParserError
 
 from .completers import CompleteFromDocumentKeys
 from .validators import YAMLValidator, JSONValidator
-from .autosuggestions import AutosuggestFromDocumentData
 from .. import __application__
 
 __author__ = "Giuseppe Chiesa"
@@ -31,6 +34,16 @@ __status__ = "PerpetualBeta"
 
 DEFAULT_STYLE = 'native'
 
+SHORTCUTS_HELP = [
+    'CTRL + _ : Undo',
+    'CTRL + SPACE : Start Selection',
+    'CTRL + w : Cut Selection',
+    'ESC + w : Copy Selection',
+    'CTRL + y : Paste Selection',
+    'CTRL + k : Delete until end of line',
+    'CTRL + c : Exit without saving'
+]
+
 
 class EditorException(Exception):
     pass
@@ -38,6 +51,28 @@ class EditorException(Exception):
 
 class EditorAbortException(Exception):
     pass
+
+
+class MessageDialog(object):
+    def __init__(self, title, text):
+        self.future = Future()
+
+        def set_done():
+            self.future.set_result(None)
+
+        ok_button = Button(text='OK', handler=set_done())
+
+        self.dialog = Dialog(
+            title=title,
+            body=HSplit([
+                TextArea(text=text, scrollbar=True, read_only=True),
+            ]),
+            buttons=[ok_button],
+            width=D(preferred=80),
+            modal=True)
+
+    def __pt_container__(self):
+        return self.dialog
 
 
 class Editor(object):
@@ -73,19 +108,44 @@ class Editor(object):
         def _(event):
             event.app.current_buffer.insert_text('  ')
 
-        # @self._bindings.add('c-space')
-        # def _(event):
-        #     buff = event.app.current_buffer
-        #     if buff.complete_state:
-        #         buff.complete_next()
-        #     else:
-        #         buff.start_completion(select_first=False)
-        # return self._bindings
+        @self._bindings.add('escape', 'h')
+        def _(event):
+            title = 'Shortcuts Help'
+            text = '\n'.join(SHORTCUTS_HELP)
+            self._show_message(event.app, title=title, text=text)
+
+    def _show_message(self, application, title, text):
+        def coroutine():
+            dialog = MessageDialog(title, text)
+            yield From(self._show_dialog_as_float(application, dialog))
+
+        ensure_future(coroutine())
+
+    @staticmethod
+    def _show_dialog_as_float(application, dialog):
+        """
+        Coroutine
+        :param application:
+        :param dialog:
+        :return:
+        """
+        float_ = Float(content=dialog)
+        float_list = application.layout.container.children[0].floats
+        float_list.insert(0, float_)
+        focused_before = application.layout.current_window
+        application.layout.focus(dialog)
+        result = yield dialog.future
+        application.layout.focus(focused_before)
+
+        if float_ in float_list:
+            float_list.remove(float_)
+
+        raise Return(result)
 
     def bottom_bar(self):
         data = [
-            '<b>{}</b>'.format(cgi.escape('<ESC> + <Enter> to save and exit')),
-            '<b>{}</b>'.format(cgi.escape('<CTRL> + <C> exit without save'))
+            '<b>{}</b>'.format(cgi.escape('<ESC>+<Enter> : save and exit')),
+            '<b>{}</b>'.format(cgi.escape('<ESC>+h : help'))
         ]
         if self._attributes.get('config', None):
             data += ['<b>Configuration</b>: {}'.format(cgi.escape(self._attributes['config']))]
