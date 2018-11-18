@@ -29,7 +29,7 @@ class TemplateRenderer(object):
         """
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._template_file = template_file
-        self._jinja2 = jinja2.Environment(trim_blocks=True, autoescape=True)
+        self._jinja2 = jinja2.Environment(trim_blocks=True, autoescape=False)
         # load additional ansible filters
         try:
             from ansible.plugins.filter.core import FilterModule
