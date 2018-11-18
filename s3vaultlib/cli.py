@@ -123,8 +123,15 @@ def check_args():
     # create session
     create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
     """ :type : argparse.ArgumentParser """
-    create_session.add_argument('-r', '--role-name', dest='role_name', required=True,
-                                help='Role to assume')
+    create_session.add_argument('--no-eid', '--no-external-id', dest='no_external_id', action='store_true',
+                                default=False,
+                                help='Disable External ID verification')
+    cs_role = create_session.add_mutually_exclusive_group()
+    cs_role.add_argument('-r', '--role-name', dest='role_name', required=False,
+                         help='Role to assume')
+    cs_role.add_argument('-ra', '--role-arn', dest='role_arn', required=False,
+                         help='Role Arn to assume')
+
     # create s3vaultconfig
     create_s3vault_config = subparsers.add_parser('create_s3vault_config',
                                                   help='Create a new s3vault configuration file')
@@ -313,8 +320,11 @@ def command_configedit(args, conn_manager):
 
 def command_createtoken(args):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    external_id = getpass('External ID:')
-    token_factory = TokenFactory(role_name=args.role_name, external_id=external_id)
+    external_id = None
+    if not args.no_external_id:
+        # prompt external id for verification
+        external_id = getpass('External ID:')
+    token_factory = TokenFactory(role_name=args.role_name, role_arn=args.role_arn, external_id=external_id)
     token_factory.generate_token()
     if token_factory.token:
         logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
