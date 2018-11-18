@@ -29,42 +29,53 @@
                             "Action": [
                                 "sts:AssumeRole"
                             ]
-                        },
-                        {
-                            "Sid": "AllowListKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:List*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/webserver/*",
-                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
-                            ]
-                        },
-                        {
-                            "Sid": "AllowGetKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:Get*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/webserver/*",
-                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
-                            ]
-                        },
-                        {
-                            "Sid": "AllowWriteKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:Put*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/webserver/*",
-                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
-                            ]
                         }
                     ]
                 },
+                "Policies": [
+                    {
+                        "PolicyName": "PolicyS3VRoleAdminrole",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "AllowListKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:List*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example",
+                                        "arn:aws:s3:::my_bucket_example/webserver/*",
+                                        "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "AllowGetKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Get*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example/webserver/*",
+                                        "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "AllowWriteKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Put*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example/webserver/*",
+                                        "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
                 "Path": "/",
                 "RoleName": "admin_role",
                 "ManagedPolicyArns": [
@@ -100,29 +111,40 @@
                             "Action": [
                                 "sts:AssumeRole"
                             ]
-                        },
-                        {
-                            "Sid": "AllowListKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:List*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/webserver/*"
-                            ]
-                        },
-                        {
-                            "Sid": "AllowGetKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:Get*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/webserver/*"
-                            ]
                         }
                     ]
                 },
+                "Policies": [
+                    {
+                        "PolicyName": "PolicyS3VRoleWebserver",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "AllowListKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:List*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example",
+                                        "arn:aws:s3:::my_bucket_example/webserver/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "AllowGetKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Get*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example/webserver/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
                 "Path": "/",
                 "RoleName": "webserver"
             }
@@ -153,29 +175,40 @@
                             "Action": [
                                 "sts:AssumeRole"
                             ]
-                        },
-                        {
-                            "Sid": "AllowListKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:List*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
-                            ]
-                        },
-                        {
-                            "Sid": "AllowGetKeyMaterialsArtifacts",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:Get*"
-                            ],
-                            "Resource": [
-                                "arn:aws:s3:::my_bucket_example/mysql_instance/*"
-                            ]
                         }
                     ]
                 },
+                "Policies": [
+                    {
+                        "PolicyName": "PolicyS3VRoleMysqlinstance",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "AllowListKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:List*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example",
+                                        "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                                    ]
+                                },
+                                {
+                                    "Sid": "AllowGetKeyMaterialsArtifacts",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Get*"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:s3:::my_bucket_example/mysql_instance/*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
                 "Path": "/",
                 "RoleName": "mysql_instance"
             }
