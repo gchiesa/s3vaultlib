@@ -13,7 +13,7 @@ twine==1.12.1
 botocore==1.12.47
 pytest-mock
 pytest-html
-tox-pyenv
+tox-pyenv==1.1.0
 moto==1.3.7
 behave
 PyHamcrest
