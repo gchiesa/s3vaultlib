@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
+import logging
+
 import jinja2
-from ansible.plugins.filter.core import FilterModule
+
+from .. import __application__
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -24,10 +27,15 @@ class TemplateRenderer(object):
         :param s3fs: S3Fs object
         :type s3fs: S3Fs
         """
+        self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._template_file = template_file
         self._jinja2 = jinja2.Environment(trim_blocks=True, autoescape=True)
         # load additional ansible filters
-        self._jinja2.filters.update(FilterModule().filters())
+        try:
+            from ansible.plugins.filter.core import FilterModule
+            self._jinja2.filters.update(FilterModule().filters())
+        except ImportError:
+            self.logger.info('Ansible not present, filter will not be added')
         self._s3fs = s3fs
         """ :type : S3Fs """
 
