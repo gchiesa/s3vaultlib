@@ -60,7 +60,7 @@ class MessageDialog(object):
         def set_done():
             self.future.set_result(None)
 
-        ok_button = Button(text='OK', handler=set_done())
+        ok_button = Button(text='OK', handler=set_done)
 
         self.dialog = Dialog(
             title=title,
@@ -108,7 +108,7 @@ class Editor(object):
         def _(event):
             event.app.current_buffer.insert_text('  ')
 
-        @self._bindings.add('escape', 'h')
+        @self._bindings.add('f1')
         def _(event):
             title = 'Shortcuts Help'
             text = '\n'.join(SHORTCUTS_HELP)
@@ -145,7 +145,7 @@ class Editor(object):
     def bottom_bar(self):
         data = [
             '<b>{}</b>'.format(cgi.escape('<ESC>+<Enter> : save and exit')),
-            '<b>{}</b>'.format(cgi.escape('<ESC>+h : help'))
+            '<b>{}</b>'.format(cgi.escape('<F1> : help'))
         ]
         if self._attributes.get('config', None):
             data += ['<b>Configuration</b>: {}'.format(cgi.escape(self._attributes['config']))]
