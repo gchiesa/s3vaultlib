@@ -100,17 +100,21 @@ class S3Fs(object):
             raise S3FsObjectException('Object not found')
         return s3obj
 
-    def put_object(self, name, content, encryption_key_arn):
+    def put_object(self, name, content, encryption_key_arn, force_dot_file=False):
         """
         Put an object in the S3 path by encrypting it with SSE
 
         :param name: object name
         :param content: content of the object
         :param encryption_key_arn: key arn to use for encryption
+        :param force_dot_file: if enabled it disable the check with dot in the file
         :return: the created s3object
         :rtype: S3FsObject
         """
-        if '.' in name:
+        if os.environ.get('S3VAULTLIB_FORCE_DOT_FILE', 'false').lower() == 'true':
+            force_dot_file = True
+
+        if '.' in name and not force_dot_file:
             raise ValueError('object does not support . (dot) in the name')
 
         self.logger.info('Adding object: {n}, size: {s}, to bucket: {b}, path: {p}'.format(n=name,
