@@ -11,8 +11,6 @@ import sys
 from getpass import getpass
 from io import BytesIO
 
-import yaml
-
 from . import __application__
 from . import __version__
 from .configmanager import ConfigManager
@@ -21,6 +19,7 @@ from .editor import Editor, EditorAbortException
 from .policymanager import PolicyManager
 from .s3vaultlib import S3Vault
 from .tokenfactory import TokenFactory
+from .utils import yaml
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -197,7 +196,7 @@ def load_from_yaml(filename):
     if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
         raise Exception('Unable to read file: {}'.format(filename))
     with open(filename, 'r') as fh:
-        data = yaml.safe_load(fh)
+        data = yaml.load_to_string(fh)
     return data
 
 
@@ -399,4 +398,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

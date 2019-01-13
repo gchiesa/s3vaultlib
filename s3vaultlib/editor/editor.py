@@ -7,7 +7,6 @@ import logging
 import sys
 
 import six
-import yaml
 from prompt_toolkit import PromptSession, HTML
 from prompt_toolkit.eventloop import Future, ensure_future, Return, From
 from prompt_toolkit.key_binding import KeyBindings
@@ -18,11 +17,12 @@ from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from prompt_toolkit.widgets import Dialog, Button, TextArea
 from pygments.lexers.data import YamlLexer, JsonLexer
 from pygments.styles import get_style_by_name
-from yaml.loader import ParserError
 
 from .completers import CompleteFromDocumentKeys
 from .validators import YAMLValidator, JSONValidator
 from .. import __application__
+from ..utils import yaml
+from ..utils.yaml import ParserError
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -162,10 +162,7 @@ class Editor(object):
     def data(self):
         tmp = json.loads(self._data)
         if self._mode == 'yaml':
-            return yaml.safe_dump(tmp,
-                                  default_flow_style=False,
-                                  explicit_start=True,
-                                  indent=2)
+            return yaml.write_to_string(tmp)
         elif self._mode == 'json':
             return json.dumps(tmp, indent=4, separators=(',', ': '))
         else:
@@ -182,7 +179,7 @@ class Editor(object):
     def _validate(self, result):
         try:
             if self._mode == 'yaml':
-                return yaml.safe_load(result)
+                return yaml.load_to_string(result)
             elif self._mode == 'json':
                 return json.loads(result)
         except ParserError:

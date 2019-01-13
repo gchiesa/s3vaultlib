@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import logging
 
-import yaml
-from yaml.scanner import ScannerError
-
 from .role import Role
 from .. import __application__
+from ..utils import yaml
+from ..utils.yaml import ParserError, ScannerError
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -35,8 +34,8 @@ class ConfigManager(object):
         data = {}
         try:
             with open(self._config_file, 'r') as fin:
-                data = yaml.safe_load(fin.read())
-        except ScannerError as e:
+                data = yaml.load_to_string(fin.read())
+        except (ParserError, ScannerError) as e:
             self.logger.error('Unable to load config file. Error is: {}'.format(str(e)))
 
         if not data.get('s3vaultlib', None):
@@ -95,5 +94,4 @@ class ConfigManager(object):
     @property
     def path_all(self):
         return self._role_paths
-
 
