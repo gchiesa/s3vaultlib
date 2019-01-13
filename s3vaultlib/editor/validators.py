@@ -4,9 +4,10 @@ from __future__ import unicode_literals
 import json
 import re
 
-import yaml
 from prompt_toolkit.validation import Validator, ValidationError
-from yaml.loader import ParserError, ScannerError
+
+from ..utils import yaml
+from ..utils.yaml import ParserError, ScannerError
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -32,7 +33,7 @@ class JSONValidator(Validator):
 class YAMLValidator(Validator):
     def validate(self, document):
         try:
-            yaml.safe_load(document.text)
+            yaml.load_to_string(document.text)
         except (ParserError, ScannerError) as e:
             raise ValidationError(message=str(e.problem).decode('utf-8'), cursor_position=e.problem_mark.index)
         except Exception:

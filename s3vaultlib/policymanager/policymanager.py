@@ -4,7 +4,7 @@ import logging
 import os
 from collections import OrderedDict
 
-from jinja2 import Environment, PackageLoader, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 from string_utils import snake_case_to_camel
 
 from .. import __application__
