@@ -59,15 +59,15 @@ class ActionModule(ActionBase):
         src = self._task.args.get('src', None)
         dest = self._task.args.get('dest', None)
 
-        force = boolean(self._task.args.get('force', True), strict=False)
+        # force = boolean(self._task.args.get('force', True), strict=False)
         follow = boolean(self._task.args.get('follow', False), strict=False)
         state = self._task.args.get('state', None)
         newline_sequence = self._task.args.get('newline_sequence', self.DEFAULT_NEWLINE_SEQUENCE)
-        variable_start_string = self._task.args.get('variable_start_string', None)
-        variable_end_string = self._task.args.get('variable_end_string', None)
-        block_start_string = self._task.args.get('block_start_string', None)
-        block_end_string = self._task.args.get('block_end_string', None)
-        trim_blocks = self._task.args.get('trim_blocks', None)
+        # variable_start_string = self._task.args.get('variable_start_string', None)
+        # variable_end_string = self._task.args.get('variable_end_string', None)
+        # block_start_string = self._task.args.get('block_start_string', None)
+        # block_end_string = self._task.args.get('block_end_string', None)
+        # trim_blocks = self._task.args.get('trim_blocks', None)
 
         wrong_sequences = ["\\n", "\\r", "\\r\\n"]
         allowed_sequences = ["\n", "\r", "\r\n"]
@@ -109,8 +109,8 @@ class ActionModule(ActionBase):
 
         # template the source data locally & get ready to transfer
         try:
-            with open(tmp_source, 'r') as f:
-                template_data = to_text(f.read())
+            # with open(tmp_source, 'r') as f:
+            #     template_data = to_text(f.read())
 
             # add ansible 'template' vars
             temp_vars = task_vars.copy()

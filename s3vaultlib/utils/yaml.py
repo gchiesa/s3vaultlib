@@ -38,10 +38,10 @@ def write_to_file(data, filename):
 
 
 __all__ = [
-    build_parser,
-    load_to_string,
-    write_to_string,
-    write_to_file,
-    ParserError,
-    ScannerError
+    'build_parser',
+    'load_to_string',
+    'write_to_string',
+    'write_to_file',
+    'ParserError',
+    'ScannerError'
 ]

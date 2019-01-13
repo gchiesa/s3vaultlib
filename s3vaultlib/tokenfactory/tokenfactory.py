@@ -8,6 +8,7 @@ from datetime import datetime
 from stat import S_IRUSR, S_IWUSR
 
 import boto3
+import pyboto3
 import pytz
 from dateutil import parser
 
@@ -53,8 +54,7 @@ class TokenFactory(object):
                                                                    role_name=role_name)
 
     def generate_token(self):
-        client = boto3.client('sts')
-        """ :type : pyboto3.sts """
+        client = boto3.client('sts')  # type: pyboto3.sts
         role_args = {
             'RoleArn': self.role_arn,
             'RoleSessionName': 's3vault_{}'.format(str(uuid.uuid4()).replace('-', '')),

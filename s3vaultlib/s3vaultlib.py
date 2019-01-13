@@ -62,8 +62,7 @@ class S3Vault(object):
             src_file = open(src, 'rb')
         else:
             src_file = src
-        s3fsobj = s3fs.put_object(dest, src_file.read(), key_arn)
-        """ :type : S3FsObject """
+        s3fsobj = s3fs.put_object(dest, src_file.read(), key_arn)  # type: S3FsObject
         src_file.close()
         return s3fsobj.metadata
 
@@ -76,8 +75,7 @@ class S3Vault(object):
         :rtype: basestring
         """
         s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
-        s3fsobject = s3fs.get_object(name)
-        """ :type : S3FsObject """
+        s3fsobject = s3fs.get_object(name)  # type: S3FsObject
         return s3fsobject.raw()
 
     def get_file_metadata(self, name):

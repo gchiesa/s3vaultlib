@@ -150,8 +150,7 @@ def check_args():
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
     # ansible path
-    ansible = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
-    """ :type : argparse.ArgumentParser """
+    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')  # type: argparse.ArgumentParser
     return parser.parse_args()
 
 
@@ -237,10 +236,10 @@ def convert_type(value, value_type):
         raise Exception('value type: {t} not supported'.format(t=value_type))
 
     try:
-        if value_type == 'list':
-            assert type(converted_object) == list
-        elif value_type == 'dict':
-            assert type(converted_object) == dict
+        if value_type == 'list' and not isinstance(converted_object, list):
+            raise AssertionError()
+        elif value_type == 'dict' and not isinstance(converted_object, dict):
+            raise AssertionError()
     except AssertionError:
         raise Exception('Provided value does not match with the type: {t}'.format(t=value_type))
     return converted_object

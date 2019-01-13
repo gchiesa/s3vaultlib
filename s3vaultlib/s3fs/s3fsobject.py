@@ -131,7 +131,8 @@ class S3FsObject(object):
         json_data = json.loads(self._raw)
         return self._get_value(json_data, key)
 
-    def _set_value(self, d, path, value):
+    @staticmethod
+    def _set_value(d, path, value):
         levels = path.split('.')
         leaf_key = levels.pop()
         tmp_dict = {leaf_key: value}

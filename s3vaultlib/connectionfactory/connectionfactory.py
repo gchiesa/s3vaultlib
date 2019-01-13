@@ -31,7 +31,7 @@ class ConnectionFactory(object):
         """Returns a client connection"""
         return self._connection('client', resource)
 
-    def _connection(self, type=None, resource=None):
+    def _connection(self, conn_type=None, resource=None):
         """Allocate a connection"""
         params = deepcopy(self._params)
         profile = params.pop('profile_name', None)
@@ -48,16 +48,16 @@ class ConnectionFactory(object):
                               'aws_session_token': token['SessionToken']
                               }
 
-        if type not in ['both', 'resource', 'client']:
-            raise ValueError('connection: {c} not supported'.format(c=type))
+        if conn_type not in ['both', 'resource', 'client']:
+            raise ValueError('connection: {c} not supported'.format(c=conn_type))
 
-        if type == 'resource':
+        if conn_type == 'resource':
             resource = boto3.session.Session(**session_params).resource(resource,
                                                                         region_name=self._region,
                                                                         endpoint_url=self._endpoint,
                                                                         **params)
             return resource
-        elif type == 'client':
+        elif conn_type == 'client':
             client = boto3.session.Session(**session_params).client(resource,
                                                                     region_name=self._region,
                                                                     endpoint_url=self._endpoint,
