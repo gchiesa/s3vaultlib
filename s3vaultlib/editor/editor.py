@@ -192,7 +192,7 @@ class Editor(object):
         style = style_from_pygments_cls(get_style_by_name(DEFAULT_STYLE))
         session = PromptSession(multiline=True,
                                 lexer=PygmentsLexer(self.lexer_class),
-                                validator=self.validator_class,
+                                validator=self.validator_class(),
                                 bottom_toolbar=self.bottom_bar,
                                 mouse_support=False,
                                 style=style,

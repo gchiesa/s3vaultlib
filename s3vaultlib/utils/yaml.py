@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from ruamel.yaml import YAML
 from ruamel.yaml.parser import ParserError, ScannerError
-from io import BytesIO
+from io import StringIO
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -27,9 +27,9 @@ def load_to_string(data):
 
 def write_to_string(data):
     y = build_parser()
-    s = BytesIO()
-    y.dump(data, s)
-    return s.getvalue()
+    dst = StringIO()
+    y.dump(data, dst)
+    return dst.getvalue()
 
 
 def write_to_file(data, filename):
