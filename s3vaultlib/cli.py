@@ -340,7 +340,7 @@ def command_createcloudformation(args):
     s3vault_config = ConfigManager(args.s3vault_config.name).load_config()
     policy_manager = PolicyManager(s3vault_config)
     with open(args.output_file.name, 'wb') as cf_file:
-        cf_file.write(policy_manager.generate_cloudformation())
+        cf_file.write(policy_manager.generate_cloudformation().encode('utf-8'))
     logger.info('CloudFormation template generated: {}'.format(args.output_file.name))
 
 
