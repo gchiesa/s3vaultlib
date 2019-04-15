@@ -1,0 +1,7 @@
+{% for role in vault.roles if 'write' not in role.privileges %}
+"KMSKey{{ role.name|cfsanitize|title }}": {
+    "Description": "KMS KeyID for role {{ role.name }}",
+    "Value": { "Fn::GetAtt": [ "KMSKey{{ role.name|cfsanitize|title }}", "Arn" ] },
+    "Export": { "Name": "IAM-KMSKey{{ role.name|cfsanitize|title }}" }
+}{{ ',' if not loop.last }}
+{%  endfor %}

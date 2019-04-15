@@ -26,6 +26,16 @@
                     "Version": "2012-10-17",
                     "Statement": [
                         {
+                            "Action": [
+                                "kms:ListAliases"
+                            ],
+                            "Resource": [
+                                "*"
+                            ],
+                            "Effect": "Allow",
+                            "Sid": "AllowListKMSKeyAliases"
+                        },
+                        {
                             "Sid": "AllowListKeyMaterialsArtifacts",
                             "Effect": "Allow",
                             "Action": [
@@ -55,9 +65,11 @@
                             "Sid": "AllowWriteKeyMaterialsArtifacts",
                             "Effect": "Allow",
                             "Action": [
-                                "s3:Put*"
+                                "s3:Put*",
+                                "s3:Delete*"
                             ],
                             "Resource": [
+                                "arn:aws:s3:::{{ vault.bucket }}/*",
                                 {%  for path in role.path %}
                                 "arn:aws:s3:::{{ vault.bucket }}/{{ path }}/*"{{ ',' if not loop.last }}
                                 {% endfor %}

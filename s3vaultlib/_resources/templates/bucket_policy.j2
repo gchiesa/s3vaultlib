@@ -80,7 +80,7 @@
                 "Action": "s3:PutObject",
                 "Resource": "arn:aws:s3:::{{ vault.bucket }}/*",
                 "Condition": {
-                    "Null": {
+                    "StringNotEquals": {
                         "s3:x-amz-server-side-encryption": "true"
                     }
                 }
