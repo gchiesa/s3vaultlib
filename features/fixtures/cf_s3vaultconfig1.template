@@ -39,6 +39,16 @@
                             "Version": "2012-10-17",
                             "Statement": [
                                 {
+                                    "Action": [
+                                        "kms:ListAliases"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Sid": "AllowListKMSKeyAliases"
+                                },
+                                {
                                     "Sid": "AllowListKeyMaterialsArtifacts",
                                     "Effect": "Allow",
                                     "Action": [
@@ -65,9 +75,11 @@
                                     "Sid": "AllowWriteKeyMaterialsArtifacts",
                                     "Effect": "Allow",
                                     "Action": [
-                                        "s3:Put*"
+                                        "s3:Put*",
+                                        "s3:Delete*"
                                     ],
                                     "Resource": [
+                                        "arn:aws:s3:::my_bucket_example/*",
                                         "arn:aws:s3:::my_bucket_example/webserver/*",
                                         "arn:aws:s3:::my_bucket_example/mysql_instance/*"
                                     ]
@@ -120,6 +132,16 @@
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
+                                {
+                                    "Action": [
+                                        "kms:ListAliases"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Sid": "AllowListKMSKeyAliases"
+                                },
                                 {
                                     "Sid": "AllowListKeyMaterialsArtifacts",
                                     "Effect": "Allow",
@@ -184,6 +206,16 @@
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
+                                {
+                                    "Action": [
+                                        "kms:ListAliases"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Sid": "AllowListKMSKeyAliases"
+                                },
                                 {
                                     "Sid": "AllowListKeyMaterialsArtifacts",
                                     "Effect": "Allow",
@@ -504,7 +536,7 @@
                             "Action": "s3:PutObject",
                             "Resource": "arn:aws:s3:::my_bucket_example/*",
                             "Condition": {
-                                "Null": {
+                                "StringNotEquals": {
                                     "s3:x-amz-server-side-encryption": "true"
                                 }
                             }
@@ -514,5 +546,30 @@
             }
         }
     },
-    "Outputs": {}
+    "Outputs": {
+        "KMSKeyWebserver": {
+            "Description": "KMS KeyID for role webserver",
+            "Value": {
+                "Fn::GetAtt": [
+                    "KMSKeyWebserver",
+                    "Arn"
+                ]
+            },
+            "Export": {
+                "Name": "IAM-KMSKeyWebserver"
+            }
+        },
+        "KMSKeyMysqlinstance": {
+            "Description": "KMS KeyID for role mysql_instance",
+            "Value": {
+                "Fn::GetAtt": [
+                    "KMSKeyMysqlinstance",
+                    "Arn"
+                ]
+            },
+            "Export": {
+                "Name": "IAM-KMSKeyMysqlinstance"
+            }
+        }
+    }
 }
