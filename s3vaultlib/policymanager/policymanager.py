@@ -66,6 +66,11 @@ class PolicyManager(object):
         cf_data = template.render(self.get_policy_variables())
         return cf_data
 
+    def _generate_outputs(self):
+        template = self._j2env.get_template('outputs.j2')
+        cf_data = template.render(self.get_policy_variables())
+        return cf_data
+
     def _load_vars(self):
         self._data = dict(vault=dict(bucket=self._config_manager.vault['bucket'],
                                      path_all=self._config_manager.path_all,
@@ -87,7 +92,8 @@ class PolicyManager(object):
         template = self._j2env.get_template('cf_template.j2')
         variables = dict(roles=self._generate_roles(),
                          bucket_policy=self._generate_bucket_policy(),
-                         kms=self._generate_kms())
+                         kms=self._generate_kms(),
+                         outputs=self._generate_outputs())
         rendered = template.render(variables)
         self.logger.debug('generated code: \n{}'.format(rendered))
         return cloudformation_prettyprint(rendered)
