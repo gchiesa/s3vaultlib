@@ -5,5 +5,5 @@
 __author__ = """Giuseppe Chiesa"""
 __email__ = 'mail@giuseppechiesa.it'
 __application__ = 's3vaultlib'
-__version__ = '2.3.3'
+__version__ = '2.3.4'
 
