@@ -10,7 +10,7 @@ PyYAML>=4.2b1,<5
 pytest==4.0.0
 pytest-runner==4.2
 twine==1.12.1
-botocore==1.12.47
+botocore==1.12.143
 pytest-mock
 pytest-html
 tox-pyenv
