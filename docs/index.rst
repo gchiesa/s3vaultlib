@@ -1,18 +1,19 @@
-Welcome to S3Vault Library's documentation!
-===========================================
+HOW TOs
+=======
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
-   readme
-   installation
-   usage
-   modules
+   General <readme>
+   library_installation
+   library_usage
+   cli_usage
+   howto
+   API Reference <modules>
    contributing
    authors
-   history
 
 Indices and tables
 ==================

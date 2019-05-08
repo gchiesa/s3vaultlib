@@ -1,0 +1,6 @@
+.. _architecture:
+
+Architecture
+============
+
+// TODO

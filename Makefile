@@ -66,9 +66,6 @@ coverage: ## check code coverage quickly with the default Python
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/s3vaultlib.rst
 	rm -f docs/modules.rst
-	# convert any markdown in rst
-	find . -name "README.md" -not -path '*/\.*' \
-		-exec sh -c 'F={} && T=$${F%.md}.rst && pandoc --verbose -t rst -o $${T} $${F}' \;
 	sphinx-apidoc -o docs/ s3vaultlib
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
