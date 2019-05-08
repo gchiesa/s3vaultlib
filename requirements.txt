@@ -8,6 +8,6 @@ six>=1.11.0
 python-string-utils==0.6.0
 dpath==1.4.2
 prompt-toolkit==2.0.7
-Pygments==2.2.0
+Pygments==2.4.0
 ruamel.yaml==0.15.85
 
