@@ -33,7 +33,7 @@ Provisioning of keymaterials
 
 .. code:: bash
 
-   s3vaultcli configset -b 'test-bucket-for-s3-vault' -p webserver -k role_webserver -s htpasswd -d htpasswd
+   s3vaultcli push -b 'test-bucket-for-s3-vault' -p webserver -k role_webserver -s htpasswd -d htpasswd
 
 **NOTE**\ *: if you don’t pass the kms_alias, the library will try to
 detect the role and use a KMS key with the same alias of the role name.
@@ -98,14 +98,39 @@ with the content:
 EC2 Startup
 -----------
 
-Now we can launch an EC2 instance, keeping in mind the followings: - We
-need to make sure the EC2 instance will use the pre-baked AMI generated
-with Packer - We need to associate to the EC2 instance the role
-``role_webserver`` - We need to setup the following command (beside the
-rest) in userdata
+Now we can launch an EC2 instance, keeping in mind the followings:
+
+* We need to make sure the EC2 instance will use the pre-baked AMI generated
+  with Packer
+* We need to associate to the EC2 instance the role ``role_webserver``
+* We need to setup the following command (beside the rest) in userdata
 
 .. code:: bash
 
    s3vaultcli template -b 'test-bucket-for-s3-vault' -p webserver -t /opt/nginx.conf.j2 -d /etc/nginx/nginx.conf
    s3vaultcli template -b 'test-bucket-for-s3-vault' -p webserver -t htpasswd.j2 -d /etc/nginx/htpasswd
    chown nginx /etc/nginx/htpasswd && chmod go-rwx /etc/nginx/htpasswd
+
+
+Ansible Support
+---------------
+
+Instead using ``s3vaultcli template`` we can also automate the provisioning of keymaterials
+via the Ansible Action Plugin shipped together with the library.
+The Ansible Plugin expose a new command ``s3vault_template``. The command has the same capabilities of the ``template``
+command in Ansible with the additional feature that all the variables in the template are resolved using the Vault.
+
+Example:
+
+.. code:: yaml
+
+    - name: Set nginx configuration
+      s3vault_template:
+        bucket: test-bucket-for-s3-vault
+        path: webserver
+        src: /opt/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: 0600
+        owner: nginx
+        group: nginx
+

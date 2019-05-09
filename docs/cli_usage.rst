@@ -1,5 +1,7 @@
-Command Library Interface
-=========================
+.. _cli_usage:
+
+Command Line Interface: s3vaultcli
+==================================
 
 S3Vaultlib ships also a powerful command line interface to interact with
 several functionalities

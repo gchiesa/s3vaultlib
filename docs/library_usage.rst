@@ -57,6 +57,7 @@ Managing a s3vault
     s3vault.set_property(configfile='myconfiguration', key='username', value='test_user', key_alias='my-kms-alias')
 
 * Expand a template file from a S3Vault
+
 Assuming there is a object in the vault named ``mycert`` we can create a template like the following:
 
 .. code-block:: console

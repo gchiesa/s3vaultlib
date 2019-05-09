@@ -64,17 +64,18 @@ HOW-TOs
 Example scenarios
 ~~~~~~~~~~~~~~~~~
 
--  `Provisioning a vault <./docs/howto_provisioning_vault.md>`__ A
+-  :ref:`Provisioning a vault <howto_provisioning_vault>` A
    simple example to see how to provision a vault via the command line
    interface
--  `Configure NGINX with S3Vaultlib <./docs/howto_nginx.md>`__ A simple
+-  :ref:`Configure NGINX with S3Vaultlib <howto_nginx>` A simple
    example where we deploy an environment unaware NGINX instance and
    it’s configured via S3Vaultlib ansible plugin
 
 CLI Usage
 ~~~~~~~~~
 
-The complete documentation can be found [here]
+The complete documentation can be found here:
+:ref:`cli_usage`
 
 Alternatives
 ------------
