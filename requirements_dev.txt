@@ -12,7 +12,7 @@ pytest-runner==4.2
 twine==1.12.1
 botocore==1.12.47
 pytest-mock
-pytest-html
+pytest-html==1.22.0
 tox-pyenv
 moto==1.3.7
 behave
