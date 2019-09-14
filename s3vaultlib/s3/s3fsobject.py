@@ -38,7 +38,7 @@ class S3FsObject(object):
         self._header = {}
         self._bucket = bucket
         self._path = path
-        self._raw = ''
+        self._raw = None
         self._is_json = False
         self._fs = fs
         """ :type : pyboto3.s3 """
@@ -167,7 +167,7 @@ class S3FsObject(object):
         json_data = json.loads(self._raw)
         # if the key contains . separator then we assume the key is a nested key and we allocate the entire path
         json_data = self._set_value(json_data, key, value)
-        self._raw = json.dumps(json_data)
+        self._raw = json.dumps(json_data).encode()
 
     def __getattr__(self, item):
         """
@@ -189,7 +189,7 @@ class S3FsObject(object):
         """
         if not self._raw:
             self._load_content()
-        return self._raw
+        return self._raw.decode()
 
     def raw(self):
         if not self._raw:

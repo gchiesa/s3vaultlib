@@ -4,7 +4,8 @@ import logging
 
 import requests
 
-from .. import __application__
+from s3vaultlib import __application__
+from .base import MetadataBase
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -19,11 +20,11 @@ class EC2MetadataException(Exception):
     pass
 
 
-class EC2Metadata(object):
+class EC2Metadata(MetadataBase):
     """
     Object that retrieve metadata from within an EC2 instance
     """
-    def __init__(self, endpoint='169.254.169.254', version='latest'):
+    def __init__(self, endpoint='169.254.169.254', version='latest', session_info=None):
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._endpoint = endpoint
         self._version = version
@@ -38,7 +39,7 @@ class EC2Metadata(object):
         try:
             response = requests.get(url, timeout=5)
         except Exception:
-            self.logger.exception('Error while getting metadata')
+            self.logger.exception('Error while getting metadata. Perhaps you want to use --no-ec2 flag?')
             raise
         if not response.ok:
             raise EC2MetadataException('Error while reading metadata from path')

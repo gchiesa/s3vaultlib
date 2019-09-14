@@ -2,10 +2,10 @@
 import logging
 import os
 from io import BytesIO
-
+import six
 from .s3fsobject import S3FsObject, S3FsObjectException
 from .. import __application__
-from ..connectionfactory import ConnectionFactory
+from ..connection.connectionfactory import ConnectionFactory
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -42,7 +42,7 @@ class S3Fs(object):
         self._path = path
         self._s3fs_objects = []
         self.fs = self._connection_factory.client('s3')
-        """ :type : pyboto3.s3 """
+        """:type: pyboto3.s3 """
 
     @staticmethod
     def is_file(s3elem):
@@ -122,11 +122,18 @@ class S3Fs(object):
                                                                                            b=self._bucket,
                                                                                            p=self._path))
         object_body = BytesIO(content)
-        self.fs.put_object(Bucket=self._bucket,
-                           ServerSideEncryption='aws:kms',
-                           Body=object_body,
-                           Key=os.path.join(self._path, name),
-                           SSEKMSKeyId=encryption_key_arn)
+        try:
+            args = dict(Bucket=self._bucket,
+                        ServerSideEncryption='aws:kms',
+                        Body=object_body,
+                        Key=os.path.join(self._path, name),
+                        SSEKMSKeyId=encryption_key_arn)
+            self.logger.debug('Trying to put object in the vault with configuration: {c}'.format(c=args))
+            self.fs.put_object(**args)
+        except Exception as e:
+            self.logger.error("Error during put_object operation. Type: {t}. Error: "
+                              "{e}".format(t=str(type(e)), e=str(e)))
+            raise
         s3obj = next(iter([s3fsobj for s3fsobj in self._get_s3fsobjects(refresh=True) if s3fsobj.name == name]), None)
         return s3obj
 
@@ -141,4 +148,4 @@ class S3Fs(object):
         """
         if not s3fsobject.is_encrypted:
             raise S3FsException('Unable to update unencrypted object')
-        return self.put_object(s3fsobject.name, str(s3fsobject), s3fsobject.kms_arn)
+        return self.put_object(s3fsobject.name, s3fsobject.raw(), s3fsobject.kms_arn)

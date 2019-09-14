@@ -9,4 +9,3 @@ __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
 
-from .editor import Editor, EditorException, EditorAbortException

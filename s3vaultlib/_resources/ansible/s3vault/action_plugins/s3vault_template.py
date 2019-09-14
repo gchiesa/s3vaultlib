@@ -10,8 +10,8 @@ from ansible.module_utils._text import to_bytes, to_text
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action import ActionBase
 from ansible.template import generate_ansible_template_vars
-from s3vaultlib.ec2metadata.ec2metadata import EC2Metadata
-from s3vaultlib.connectionfactory.connectionfactory import ConnectionFactory
+from s3vaultlib.metadata.factory import MetadataFactory
+from s3vaultlib.connection.connectionfactory import ConnectionFactory
 from s3vaultlib.s3vaultlib import S3Vault
 
 __author__ = "Giuseppe Chiesa"
@@ -118,7 +118,7 @@ class ActionModule(ActionBase):
 
             # get the role
             if ec2:
-                ec2_metadata = EC2Metadata()
+                ec2_metadata = MetadataFactory().get_instance(is_ec2=True)
                 template = jinja2.Template(path)
                 vault_path = template.render({'role_name': ec2_metadata.role})
             else:

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.completion import Completer, Completion
 
 from .utils import json_fixer, yaml_fixer, extract_tokens
+import six
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -44,4 +45,4 @@ class CompleteFromDocumentKeys(Completer):
             return
         for t in self._token_list:
             if t.startswith(last_word):
-                yield Completion(t.decode('utf-8'), -len(last_word))
+                yield Completion(six.text_type(t), -len(last_word))

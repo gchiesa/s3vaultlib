@@ -4,8 +4,8 @@ import os
 import copy
 import logging
 from ansible.module_utils.basic import AnsibleModule
-from s3vaultlib.ec2metadata.ec2metadata import EC2Metadata
-from s3vaultlib.connectionfactory.connectionfactory import ConnectionFactory
+from s3vaultlib.metadata.ec2 import EC2Metadata
+from s3vaultlib.connection.connectionfactory import ConnectionFactory
 from s3vaultlib.s3vaultlib import S3Vault
 
 logging.basicConfig(level=logging.DEBUG)
@@ -167,7 +167,7 @@ def run_module():
     with open(dest_file, 'wb') as f_handler:
         f_handler.write(s3vault.render_template(src_file,
                                                 ansible_env=ansible_env,
-                                                environment=environment))
+                                                environment=environment).encode())
 
     file_args = module.load_file_common_arguments(module.params)
     # path is used for the s3 bucket so we will override with the dest file

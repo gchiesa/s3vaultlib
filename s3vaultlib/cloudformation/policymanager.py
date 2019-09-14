@@ -7,8 +7,8 @@ from collections import OrderedDict
 from jinja2 import Environment, FileSystemLoader
 from string_utils import snake_case_to_camel
 
-from .. import __application__
-from ..configmanager import ConfigManager
+from s3vaultlib import __application__
+from s3vaultlib.config.configmanager import ConfigManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -52,21 +52,31 @@ class PolicyManager(object):
         pass
 
     def _generate_roles(self):
+        self.logger.info('Generating IAM roles and policies')
         template = self._j2env.get_template('roles.j2')
         cf_data = template.render(self.get_policy_variables())
         return cf_data
 
     def _generate_kms(self):
+        self.logger.info('Generating KMS resources')
         template = self._j2env.get_template('kms.j2')
         cf_data = template.render(self.get_policy_variables())
         return cf_data
 
+    def _generate_groups(self):
+        self.logger.info('Generating IAM groups')
+        template = self._j2env.get_template('groups.j2')
+        cf_data = template.render(self.get_policy_variables())
+        return cf_data
+
     def _generate_bucket_policy(self):
+        self.logger.info('Generating S3 bucket policy')
         template = self._j2env.get_template('bucket_policy.j2')
         cf_data = template.render(self.get_policy_variables())
         return cf_data
 
     def _generate_outputs(self):
+        self.logger.info('Generating Cloudformation exports')
         template = self._j2env.get_template('outputs.j2')
         cf_data = template.render(self.get_policy_variables())
         return cf_data
@@ -77,7 +87,7 @@ class PolicyManager(object):
                                      roles=self._config_manager.roles))
         if self._connection_factory:
             self._data['vault']['roles'] = [role.with_connection_factory(self._connection_factory) for role in
-                                           self._config_manager.roles]
+                                            self._config_manager.roles]
         return self._data
 
     def with_connection_factory(self, connection_factory):
@@ -93,6 +103,7 @@ class PolicyManager(object):
         variables = dict(roles=self._generate_roles(),
                          bucket_policy=self._generate_bucket_policy(),
                          kms=self._generate_kms(),
+                         groups=self._generate_groups(),
                          outputs=self._generate_outputs())
         rendered = template.render(variables)
         self.logger.debug('generated code: \n{}'.format(rendered))

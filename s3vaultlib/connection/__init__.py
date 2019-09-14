@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import logging
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -8,6 +7,3 @@ __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
-
-from .s3fs import S3Fs, S3FsException
-from .s3fsobject import S3FsObject, S3FsObjectException
