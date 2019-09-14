@@ -6,7 +6,7 @@ from behave import *
 from hamcrest import *
 
 from conf import FIXTURES_PATH, WORKSPACE
-from s3vaultlib.policymanager import PolicyManager
+from s3vaultlib.cloudformation.policymanager import PolicyManager
 
 
 @step('we generate the cloudformation')

@@ -3,7 +3,7 @@ import shutil
 from hamcrest import *
 from behave import *
 
-from s3vaultlib.configmanager import ConfigManager, ConfigException
+from s3vaultlib.config.configmanager import ConfigManager, ConfigException
 from conf import FIXTURES_PATH, WORKSPACE
 
 

@@ -245,6 +245,40 @@
                 "RoleName": "mysql_instance"
             }
         },
+        "S3VGroupAdminrole": {
+            "Type": "AWS::IAM::Group",
+            "Properties": {
+                "GroupName": "S3VGroupAdminrole",
+                "Policies": [
+                    {
+                        "PolicyName": "AllowAssumeRoleAdminrole",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sts:AssumeRole"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": [
+                                                "arn:aws:iam::${a}:role/admin_role",
+                                                {
+                                                    "a": {
+                                                        "Ref": "AWS::AccountId"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "KMSKeyWebserver": {
             "DeletionPolicy": "Retain",
             "Type": "AWS::KMS::Key",
@@ -536,7 +570,7 @@
                             "Action": "s3:PutObject",
                             "Resource": "arn:aws:s3:::my_bucket_example/*",
                             "Condition": {
-                                "StringNotEquals": {
+                                "Null": {
                                     "s3:x-amz-server-side-encryption": "true"
                                 }
                             }
