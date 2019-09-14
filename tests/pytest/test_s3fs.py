@@ -3,9 +3,8 @@ import os
 
 import pytest
 
-from s3vaultlib.s3fs import S3Fs
-from s3vaultlib.s3fs import S3FsObject
-from s3vaultlib.s3fs import S3FsObjectException
+from s3vaultlib.s3.s3fs import S3Fs
+from s3vaultlib.s3.s3fsobject import S3FsObject, S3FsObjectException
 from .fixtures import s3 as s3fixtures
 from .mock.s3 import S3Mock
 import six

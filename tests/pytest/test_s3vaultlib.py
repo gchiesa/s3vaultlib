@@ -6,7 +6,7 @@
 #
 # import tests.pytest
 # from moto import mock_s3, mock_ec2, mock_kms
-# from s3vaultlib.connectionfactory import ConnectionFactory
+# from s3vaultlib.connection import ConnectionFactory
 # from s3vaultlib.s3vaultlib import S3Vault
 # import boto3
 # import os
