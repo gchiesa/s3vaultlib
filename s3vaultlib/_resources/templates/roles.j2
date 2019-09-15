@@ -90,5 +90,11 @@
         ]
         {%  endif %}
     }
+},
+"S3VInstanceProfile{{ role.name|cfsanitize|title }}": {
+    "Type": "AWS::IAM::InstanceProfile",
+    "Properties": {
+        "Roles": [{ "Ref": "S3VRole{{ role.name|cfsanitize|title }}" }]
+    }
 }{{ ',' if not loop.last }}
 {%  endfor %}
