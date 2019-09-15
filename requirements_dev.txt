@@ -8,7 +8,7 @@ Sphinx
 cryptography
 PyYAML
 pytest
-pytest-runner
+pytest-runner==5.1
 twine
 botocore
 pytest-mock
