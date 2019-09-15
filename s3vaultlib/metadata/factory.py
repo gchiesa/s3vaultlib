@@ -15,5 +15,5 @@ class MetadataFactory(object):
     @staticmethod
     def get_instance(is_ec2=False, session_info=None):
         if is_ec2:
-            return ec2.EC2Metadata(session_info)
-        return local.LocalMetadata(session_info)
+            return ec2.EC2Metadata(session_info=session_info)
+        return local.LocalMetadata(session_info=session_info)
