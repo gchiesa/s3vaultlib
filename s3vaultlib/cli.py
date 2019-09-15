@@ -258,9 +258,8 @@ def command_template(args, conn_manager):
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
     ansible_env = copy.deepcopy(os.environ)
     environment = copy.deepcopy(os.environ)
-    args.dest.write(s3vault.render_template(args.template.name,
-                                            ansible_env=ansible_env,
-                                            environment=environment))
+    data = s3vault.render_template(args.template.name, ansible_env=ansible_env, environment=environment)
+    args.dest.write(data.encode())
 
 
 def command_push(args, conn_manager):
