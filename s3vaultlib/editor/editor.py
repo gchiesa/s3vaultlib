@@ -99,7 +99,8 @@ class Editor(object):
         try:
             json.loads(self._data)
         except Exception as e:
-            raise EditorException('Invalid data. Error: {t}. Message: {e}'.format(t=str(type(e)), e=str(e)))
+            raise EditorException('Invalid data. Data is:\n{data}\n Error: {t}. Message: '
+                                  '{e}'.format(data=self._data, t=str(type(e)), e=str(e)))
 
     def _load_key_bindings(self):
         self._bindings = KeyBindings()
@@ -156,7 +157,7 @@ class Editor(object):
         if self._attributes.get('debug', None):
             data += ['<b>Debug</b>: {}'.format(cgi.escape(self._attributes['debug']))]
         text = ' - '.join(data)
-        return HTML(text.decode('utf-8'))
+        return HTML(six.text_type(text))
 
     @property
     def data(self):
@@ -222,7 +223,7 @@ if __name__ == '__main__':
     # edit a file
     filename = sys.argv[1]
     with open(filename, 'rb') as fh:
-        data = fh.read()
+        data = fh.read().decode()
 
     editor = Editor(data, attributes={'debug': 'enabled'}, mode=sys.argv[2])
     editor.run()

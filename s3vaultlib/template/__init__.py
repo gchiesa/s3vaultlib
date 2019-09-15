@@ -8,5 +8,3 @@ __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
-
-from .configmanager import ConfigManager, ConfigException

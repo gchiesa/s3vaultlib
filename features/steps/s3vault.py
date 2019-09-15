@@ -9,7 +9,7 @@ import boto3
 from behave import given, when, then
 
 from conf import WORKSPACE, FIXTURES_PATH
-from s3vaultlib.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionfactory import ConnectionFactory
 from s3vaultlib.s3vaultlib import S3Vault
 
 __author__ = "Giuseppe Chiesa"

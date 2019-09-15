@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import logging
 
+from s3vaultlib import __application__
+from s3vaultlib.utils import yaml
+from s3vaultlib.utils.yaml import ParserError, ScannerError
 from .role import Role
-from .. import __application__
-from ..utils import yaml
-from ..utils.yaml import ParserError, ScannerError
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -43,7 +43,7 @@ class ConfigManager(object):
 
         try:
             self.load_vault(data['s3vaultlib'])
-        except ConfigException as e:
+        except ConfigException:
             raise
 
         try:
@@ -94,4 +94,3 @@ class ConfigManager(object):
     @property
     def path_all(self):
         return self._role_paths
-

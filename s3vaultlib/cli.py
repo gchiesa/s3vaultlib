@@ -13,12 +13,12 @@ from io import BytesIO
 
 from . import __application__
 from . import __version__
-from .configmanager import ConfigManager
-from .connectionfactory import ConnectionFactory
-from .editor import Editor, EditorAbortException
-from .policymanager import PolicyManager
+from .cloudformation.policymanager import PolicyManager
+from .config.configmanager import ConfigManager
+from .connection.connectionfactory import ConnectionFactory
+from .connection.tokenfactory import TokenFactory
+from .editor.editor import Editor, EditorAbortException
 from .s3vaultlib import S3Vault
-from .tokenfactory import TokenFactory
 from .utils import yaml
 
 __author__ = "Giuseppe Chiesa"
@@ -49,6 +49,10 @@ def check_args():
     parser.add_argument('--region', dest='region', required=False,
                         help='AWS region to use',
                         default=None)
+    parser.add_argument('--disable-ec2', '--no-ec2', '--local', dest='disable_ec2', required=False,
+                        help='Identifies if the commands are issued in a ec2 instance or via external devices',
+                        action='store_true',
+                        default=False)
 
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument('-b', '--bucket', dest='bucket', required=True,
@@ -161,18 +165,23 @@ def configure_logging(level):
     :param level: level to set
     :return:
     """
+
     dconfig = {
         'version': 1,
         'formatters': {
             'simple': {
-                'format': '[%(name)s] [%(levelname)s] : %(message)s'
+                'format': '[%(levelname)-8s] [%(name)s]: %(message)s'
+            },
+            'colored': {
+                '()': 'colorlog.ColoredFormatter',
+                'format': '%(log_color)s[%(levelname)-8s]%(reset)s %(thin_white)s[%(name)s]%(reset)s : %(message)s'
             }
         },
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
                 'level': level.upper(),
-                'formatter': 'simple',
+                'formatter': 'colored',
                 'stream': 'ext://sys.stdout'
             }
         },
@@ -249,9 +258,8 @@ def command_template(args, conn_manager):
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
     ansible_env = copy.deepcopy(os.environ)
     environment = copy.deepcopy(os.environ)
-    args.dest.write(s3vault.render_template(args.template.name,
-                                            ansible_env=ansible_env,
-                                            environment=environment))
+    data = s3vault.render_template(args.template.name, ansible_env=ansible_env, environment=environment)
+    args.dest.write(data.encode())
 
 
 def command_push(args, conn_manager):
@@ -301,14 +309,14 @@ def command_configedit(args, conn_manager):
         'path': args.path,
         'config': args.config
     }
-    editor = Editor(json_data.encode('utf-8'), attributes=attributes, mode=args.type)
+    editor = Editor(json_data, attributes=attributes, mode=args.type)
     try:
         editor.run()
     except EditorAbortException:
         logger.warning('Config left unmodified.')
         return
     # process the result
-    memoryfile = BytesIO(editor.result)
+    memoryfile = BytesIO(editor.result.encode())
     metadata = s3vault.put_file(src=memoryfile,
                                 dest=args.config,
                                 encryption_key_arn=metadata.get('SSEKMSKeyId', ''))
@@ -316,13 +324,14 @@ def command_configedit(args, conn_manager):
     logger.debug('Metadata: {m}'.format(m=metadata))
 
 
-def command_createtoken(args):
+def command_createtoken(args, conn_manager):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
     external_id = None
     if not args.no_external_id:
         # prompt external id for verification
         external_id = getpass('External ID:')
-    token_factory = TokenFactory(role_name=args.role_name, role_arn=args.role_arn, external_id=external_id)
+    token_factory = TokenFactory(role_name=args.role_name, role_arn=args.role_arn, external_id=external_id,
+                                 connection_factory=conn_manager)
     token_factory.generate_token()
     if token_factory.token:
         logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
@@ -349,6 +358,12 @@ def command_ansiblepath():
     print('{}'.format(os.path.join(dirname, '_resources', 'ansible')))
 
 
+def is_ec2(args):
+    if args.disable_ec2:
+        return False
+    return True
+
+
 def main():
     """
     Command line tool to use some functionality of the S3Vault
@@ -358,8 +373,9 @@ def main():
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    token_factory = TokenFactory()
-    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token)
+    token_factory = TokenFactory(is_ec2=is_ec2(args))
+    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token,
+                                     is_ec2=is_ec2(args))
 
     exception_message = 'Unknown exception.'
     try:
@@ -380,7 +396,7 @@ def main():
             command_configedit(args, conn_manager)
         elif args.command == 'create_session':
             exception_message = 'Error while setting the token.'
-            command_createtoken(args)
+            command_createtoken(args, conn_manager)
         elif args.command == 'create_s3vault_config':
             exception_message = 'Error while creating s3vault config example.'
             command_createconfig(args)
@@ -391,7 +407,10 @@ def main():
             exception_message = 'Error while retrieving ansible path'
             command_ansiblepath()
     except Exception as e:
-        logger.exception('{m}. Error: {t} / {e}'.format(m=exception_message, t=str(type(e)), e=str(e)))
+        if logger.getEffectiveLevel() == logging.DEBUG:
+            logger.exception('{m}. Error: {t} / {e}'.format(m=exception_message, t=str(type(e)), e=str(e)))
+        else:
+            logger.error('{m}. Error: {t} / {e}'.format(m=exception_message, t=str(type(e)), e=str(e)))
         sys.exit(1)
 
 

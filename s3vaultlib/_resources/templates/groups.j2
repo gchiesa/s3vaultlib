@@ -1,0 +1,26 @@
+{% for role in vault.roles if 'write' in role.privileges %}
+"S3VGroup{{ role.name|cfsanitize|title }}": {
+    "Type": "AWS::IAM::Group",
+    "Properties": {
+        "GroupName": "S3VGroup{{ role.name|cfsanitize|title }}",
+        "Policies": [
+            {   "PolicyName": "AllowAssumeRole{{ role.name|cfsanitize|title }}",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Resource": [
+                                { "Fn::Sub": [ "arn:aws:iam::${a}:role/{{ role.name }}", { "a": { "Ref": "AWS::AccountId" } } ] }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}{{ ',' if not loop.last }}
+{% endfor %}

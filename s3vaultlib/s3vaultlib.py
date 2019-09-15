@@ -5,11 +5,12 @@ import six
 from botocore.client import Config
 
 from . import __application__
-from .connectionfactory import ConnectionFactory
-from .kmsresolver import KMSResolver
-from .s3fs import S3Fs, S3FsObjectException, S3FsObject
-from .templatefile import TemplateFile
-from .templaterenderer import TemplateRenderer
+from .connection.connectionfactory import ConnectionFactory
+from .kms.kmsresolver import KMSResolver
+from .s3.s3fs import S3Fs
+from .s3.s3fsobject import S3FsObjectException, S3FsObject
+from .template.templatefile import TemplateFile
+from .template.templaterenderer import TemplateRenderer
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -25,7 +26,7 @@ class S3Vault(object):
     Implements a Vault by using S3 as backend and KMS as way to protect the data
     """
 
-    def __init__(self, bucket, path, connection_factory=None):
+    def __init__(self, bucket, path, connection_factory=None, is_ec2=False):
         """
 
         :param bucket: bucket
@@ -38,7 +39,8 @@ class S3Vault(object):
         self._path = path
         self._connection_manager = connection_factory
         if not self._connection_manager:
-            self._connection_manager = ConnectionFactory(config=Config(signature_version='s3v4'))
+            self._connection_manager = ConnectionFactory(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
+        self._s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
 
     def put_file(self, src, dest, encryption_key_arn='', key_alias='', role_name=''):
         """
@@ -52,7 +54,6 @@ class S3Vault(object):
         :return: metadata of the uploaded object
         :rtype: dict
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         kms_resolver = KMSResolver(self._connection_manager, keyalias=key_alias, role_name=role_name)
         key_arn = encryption_key_arn
         if not encryption_key_arn:
@@ -62,7 +63,7 @@ class S3Vault(object):
             src_file = open(src, 'rb')
         else:
             src_file = src
-        s3fsobj = s3fs.put_object(dest, src_file.read(), key_arn)  # type: S3FsObject
+        s3fsobj = self._s3fs.put_object(dest, src_file.read(), key_arn)  # type: S3FsObject
         src_file.close()
         return s3fsobj.metadata
 
@@ -74,8 +75,7 @@ class S3Vault(object):
         :return: file content
         :rtype: basestring
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
-        s3fsobject = s3fs.get_object(name)  # type: S3FsObject
+        s3fsobject = self._s3fs.get_object(name)  # type: S3FsObject
         return s3fsobject.raw()
 
     def get_file_metadata(self, name):
@@ -86,8 +86,7 @@ class S3Vault(object):
         :return: file content
         :rtype: dict
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
-        s3fsobject = s3fs.get_object(name)
+        s3fsobject = self._s3fs.get_object(name)
         return s3fsobject.metadata
 
     def render_template(self, template_file, **kwargs):
@@ -99,13 +98,12 @@ class S3Vault(object):
         :return: rendered content
         :rtype: basestring
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         tpl = TemplateFile(template_file)
-        if tpl.is_raw_copy(s3fs.objects):
-            s3fsobject = s3fs.get_object(tpl.get_raw_copy_src())
+        if tpl.is_raw_copy(self._s3fs.objects):
+            s3fsobject = self._s3fs.get_object(tpl.get_raw_copy_src())
             data = s3fsobject.raw()
         else:
-            template_renderer = TemplateRenderer(tpl.filename, s3fs)
+            template_renderer = TemplateRenderer(tpl.filename, self._s3fs)
             data = template_renderer.render(**kwargs)
         return data
 
@@ -121,12 +119,11 @@ class S3Vault(object):
         :rtype: S3FsObject
         """
         self.logger.info('Creating new config file: {c}'.format(c=configfile))
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         kms_resolver = KMSResolver(self._connection_manager, keyalias=key_alias, role_name=role_name)
         key_arn = encryption_key_arn
         if not encryption_key_arn:
             key_arn = kms_resolver.retrieve_key_arn()
-        s3fsobject = s3fs.put_object(configfile, '{}', key_arn)
+        s3fsobject = self._s3fs.put_object(configfile, '{}'.encode(), key_arn)
         return s3fsobject
 
     def set_property(self, configfile, key, value, encryption_key_arn='', key_alias='', role_name=''):
@@ -142,14 +139,13 @@ class S3Vault(object):
         :return: metadata of the config file created/updated
         :rtype: basestring
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         try:
-            s3fsobject = s3fs.get_object(configfile)
+            s3fsobject = self._s3fs.get_object(configfile)
             """ :type: S3FsObject """
         except S3FsObjectException:
             s3fsobject = self.create_config_property(configfile, encryption_key_arn, key_alias, role_name)
         s3fsobject[key] = value
-        s3fsobj = s3fs.update_s3fsobject(s3fsobject)
+        s3fsobj = self._s3fs.update_s3fsobject(s3fsobject)
         return s3fsobj.metadata
 
     def get_property(self, configfile, key):
@@ -160,11 +156,9 @@ class S3Vault(object):
         :param key: key to query
         :return: value of the key
         """
-        s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
         try:
-            s3fsobject = s3fs.get_object(configfile)
-        except:
+            s3fsobject = self._s3fs.get_object(configfile)
+        except Exception:
             self.logger.exception('No configuration with name: {c} found'.format(c=configfile))
             raise
         return s3fsobject[key]
-

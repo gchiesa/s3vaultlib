@@ -9,4 +9,4 @@ __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
 
-from .templaterenderer import TemplateRenderer
+DEFAULT_TOKEN_FILENAME = '~/.s3vaultlib.token'

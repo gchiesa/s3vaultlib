@@ -8,6 +8,3 @@ __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
-
-from .s3fs import S3Fs, S3FsException
-from .s3fsobject import S3FsObject, S3FsObjectException

@@ -7,13 +7,15 @@ from copy import deepcopy
 from datetime import datetime
 from stat import S_IRUSR, S_IWUSR
 
-import boto3
 import pyboto3
 import pytz
+from botocore.client import Config
 from dateutil import parser
 
-from .. import __application__
-from ..ec2metadata import EC2Metadata
+from s3vaultlib import __application__
+from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.metadata.factory import MetadataFactory
+from .defaults import DEFAULT_TOKEN_FILENAME
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -29,14 +31,17 @@ class TokenFactoryException(Exception):
 
 
 class TokenFactory(object):
-    TOKEN_FILENAME = '~/.s3vaultlib.token'
+    TOKEN_FILENAME = DEFAULT_TOKEN_FILENAME
 
-    def __init__(self, role_name=None, role_arn=None, external_id=None):
+    def __init__(self, role_name=None, role_arn=None, external_id=None, connection_factory=None, is_ec2=False):
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._role_name = role_name
         self._role_arn = role_arn
         self._external_id = external_id
         self._client = None
+        self._connection_factory = connection_factory
+        if not self._connection_factory:
+            self._connection_factory = ConnectionFactory(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
 
     @property
     def role_arn(self):
@@ -45,16 +50,17 @@ class TokenFactory(object):
         return self._role_arn
 
     def _get_role_arn(self):
-        ec2_metadata = EC2Metadata()
-        if not self._role_name:
-            role_name = EC2Metadata.role
-        else:
-            role_name = self._role_name
-        return 'arn:aws:iam::{account_id}:role/{role_name}'.format(account_id=ec2_metadata.account_id,
-                                                                   role_name=role_name)
+        metadata = MetadataFactory().get_instance(is_ec2=self._connection_factory.is_ec2,
+                                                  session_info=self._connection_factory.session_info)
+        if not self._role_arn and not self._role_name:
+            raise TokenFactoryException('TokenFactory requires either role name or role arn to perform the action.')
+        if self._role_arn:
+            return self._role_arn
+        return 'arn:aws:iam::{account_id}:role/{role_name}'.format(account_id=metadata.account_id,
+                                                                   role_name=self._role_name)
 
     def generate_token(self):
-        client = boto3.client('sts')  # type: pyboto3.sts
+        client = self._connection_factory.client('sts')  # type: pyboto3.sts
         role_args = {
             'RoleArn': self.role_arn,
             'RoleSessionName': 's3vault_{}'.format(str(uuid.uuid4()).replace('-', '')),
@@ -66,24 +72,27 @@ class TokenFactory(object):
             response = client.assume_role(**role_args)
             token_dict = deepcopy(response.get('Credentials', {}))
         except Exception as e:
-            self.logger.error('Error while assuming role. Type: {t}. Error: {e}'.format(t=str(type(e)), e=str(e)))
+            self.logger.error('Error while assuming role with info: {i}. Type: {t}. Error: '
+                              '{e}'.format(i=role_args, t=str(type(e)), e=str(e)))
             raise TokenFactoryException(e)
 
         # convert the date to string
         token_dict['Expiration'] = str(token_dict['Expiration'])
+        token_dict['Region'] = self._connection_factory.region
         self._save_token(token_dict)
 
     def _save_token(self, token_dict):
         with open(os.path.expanduser(self.TOKEN_FILENAME), 'wb') as f_token:
-            f_token.write(json.dumps(token_dict))
+            f_token.write(json.dumps(token_dict).encode())
         os.chmod(os.path.expanduser(self.TOKEN_FILENAME), S_IRUSR | S_IWUSR)
 
     def _read_token(self):
         if not os.path.exists(os.path.expanduser(self.TOKEN_FILENAME)):
             return None
         try:
-            with open(os.path.expanduser(self.TOKEN_FILENAME), 'r') as f_token:
-                token_dict = json.loads(f_token.read())
+            with open(os.path.expanduser(self.TOKEN_FILENAME), 'rb') as f_token:
+                data = f_token.read()
+                token_dict = json.loads(data.decode())
         except ValueError:
             self.logger.error('Invalid token file: {f}'.format(f=os.path.expanduser(self.TOKEN_FILENAME)))
             return None

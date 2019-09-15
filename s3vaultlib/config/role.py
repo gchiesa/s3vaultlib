@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import logging
 
-from .. import __application__
-from ..kmsresolver import KMSResolver
+from s3vaultlib import __application__
+from s3vaultlib.kms.kmsresolver import KMSResolver
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -107,9 +107,10 @@ class Role(object):
     @property
     def kms_arn(self):
         if not self._connection_factory:
-            self.logger.warning('Connection factory not instantiated, you may want to use with_connection_factory first')
+            self.logger.warning('Connection factory not instantiated, you may want to use with_connection_factory '
+                                'first')
             return ''
         if not self._kms_arn:
-            kms_resolver = KMSResolver(connection_manager=self._connection_factory, keyalias=self.kms_alias)
+            kms_resolver = KMSResolver(connection_factory=self._connection_factory, keyalias=self.kms_alias)
             self._kms_arn = kms_resolver.retrieve_key_arn()
         return self._kms_arn
