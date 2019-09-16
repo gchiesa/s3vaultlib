@@ -29,7 +29,7 @@ setup(
     name=__application__,
     version='3.0.0',
     description="Python library to expose S3 as vault to store encrypted data",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author="Giuseppe Chiesa",
     author_email='mail@giuseppechiesa.it',
     url='https://github.com/gchiesa/s3vaultlib',

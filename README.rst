@@ -56,7 +56,7 @@ bucket policies to enforce high level of security and **CloudFormation**
 to create the Infrastructure as Code that combine all the above in a
 powerful vault.
 
-Check :ref:`In depth Architecture<architecture>` for more information
+Check In depth Architecture for more information
 
 HOW-TOs
 -------
@@ -64,10 +64,9 @@ HOW-TOs
 Example scenarios
 ~~~~~~~~~~~~~~~~~
 
--  :ref:`Provisioning a vault <howto_provisioning_vault>` A
-   simple example to see how to provision a vault via the command line
+-  Provisioning a vault: A simple example to see how to provision a vault via the command line
    interface
--  :ref:`Configure NGINX with S3Vaultlib <howto_nginx>` A simple
+-  Configure NGINX with S3Vaultlib: A simple
    example where we deploy an environment unaware NGINX instance and
    it’s configured via S3Vaultlib ansible plugin
 
@@ -75,7 +74,7 @@ CLI Usage
 ~~~~~~~~~
 
 The complete documentation can be found here:
-:ref:`cli_usage`
+CLI Usage
 
 Alternatives
 ------------
