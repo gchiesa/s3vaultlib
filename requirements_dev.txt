@@ -9,7 +9,7 @@ cryptography
 PyYAML
 pytest
 pytest-runner
-twine
+twine==1.15.0
 botocore
 pytest-mock
 pytest-html
