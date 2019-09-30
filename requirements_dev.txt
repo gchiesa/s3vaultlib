@@ -17,6 +17,6 @@ tox-pyenv
 moto
 behave
 PyHamcrest
-cfn-lint
+cfn-lint==0.24.3
 sphinx_rtd_theme
 ansible<2.9
