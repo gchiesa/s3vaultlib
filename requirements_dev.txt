@@ -11,7 +11,7 @@ pytest
 pytest-runner
 twine
 botocore
-pytest-mock
+pytest-mock==1.11.1
 pytest-html
 tox-pyenv
 moto
