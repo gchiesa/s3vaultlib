@@ -1,7 +1,7 @@
 bumpversion
 wheel
 watchdog
-flake8
+flake8==3.7.9
 tox
 coverage
 Sphinx==1.8.2
