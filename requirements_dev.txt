@@ -2,7 +2,7 @@ bumpversion
 wheel
 watchdog
 flake8
-tox
+tox==3.14.1
 coverage
 Sphinx==1.8.2
 cryptography
