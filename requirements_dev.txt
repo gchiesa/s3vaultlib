@@ -19,4 +19,4 @@ behave
 PyHamcrest
 cfn-lint
 sphinx_rtd_theme
-ansible<2.9
+ansible==2.9.2
