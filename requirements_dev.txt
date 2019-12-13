@@ -10,7 +10,7 @@ PyYAML
 pytest
 pytest-runner
 twine
-botocore
+botocore==1.13.38
 pytest-mock
 pytest-html
 tox-pyenv
