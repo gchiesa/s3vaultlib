@@ -3,7 +3,7 @@ wheel
 watchdog
 flake8
 tox
-coverage
+coverage==5.0
 Sphinx==1.8.2
 cryptography
 PyYAML
