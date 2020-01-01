@@ -55,7 +55,8 @@ setup(
     setup_requires=setup_requirements,
     entry_points={
         'console_scripts': [
-            's3vaultcli = s3vaultlib.cli:main'
+            's3vaultcli = s3vaultlib.cli:main',
+            's3v = s3vaultlib.cli_v2:main',
         ]
     }
 )

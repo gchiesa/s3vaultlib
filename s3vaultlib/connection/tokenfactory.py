@@ -60,6 +60,9 @@ class TokenFactory(object):
                                                                    role_name=self._role_name)
 
     def generate_token(self):
+        # delete the token if exists
+        self._delete_token()
+        # generate a new session
         client = self._connection_factory.client('sts')  # type: pyboto3.sts
         role_args = {
             'RoleArn': self.role_arn,
@@ -85,6 +88,11 @@ class TokenFactory(object):
         with open(os.path.expanduser(self.TOKEN_FILENAME), 'wb') as f_token:
             f_token.write(json.dumps(token_dict).encode())
         os.chmod(os.path.expanduser(self.TOKEN_FILENAME), S_IRUSR | S_IWUSR)
+
+    def _delete_token(self):
+        token_file = os.path.expanduser(self.TOKEN_FILENAME)
+        if os.path.exists(token_file):
+            os.unlink(os.path.expanduser(self.TOKEN_FILENAME))
 
     def _read_token(self):
         if not os.path.exists(os.path.expanduser(self.TOKEN_FILENAME)):

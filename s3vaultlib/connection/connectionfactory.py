@@ -45,7 +45,8 @@ class ConnectionFactory(object):
             response = client.get_caller_identity()
             arn = response['Arn']
         except Exception as e:
-            self.logger.error('Error while retrieving identity arn')
+            self.logger.error('Error while retrieving identity arn. Type: {t}. Error: '
+                              '{e}'.format(t=str(type(e)), e=str(e)))
             return 'n/a'
         return arn
 

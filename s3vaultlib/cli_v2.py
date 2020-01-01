@@ -25,7 +25,7 @@ def check_args():
     :return: args object
     """
 
-    parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli')
+    parser = argparse.ArgumentParser(prog='s3v', description='S3Vault Command Line Interface')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-L', '--log-level', dest='log_level', required=False,
                         help='Log level to set',
@@ -42,11 +42,11 @@ def check_args():
                         action='store_true',
                         default=False)
 
+    # <bucket>/<path>/
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument('-b', '--bucket', dest='bucket', required=True,
-                               help='Bucket to use for S3Vault')
-    common_parser.add_argument('-p', '--path', dest='path', required=True,
-                               help='Path to use in the bucket')
+    common_parser.add_argument('remote', help='Remote coordinates on the Vault. '
+                                              'In the form <bucket>/<path>/[<source|destination|config>]')
+    # KMS part
     kms = common_parser.add_mutually_exclusive_group()
     kms.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
                      default='',
@@ -56,41 +56,51 @@ def check_args():
                      help='Key arn to use to decrypt data')
 
     subparsers = parser.add_subparsers(dest='command')
-    # template
-    template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault',
-                                     parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
-    template.add_argument('-t', '--template', dest='template', required=True,
-                          help='Template to expand from s3vault path',
-                          type=argparse.FileType('rb'))
-    template.add_argument('-d', '--dest', dest='dest', required=True,
-                          help='Destination file',
-                          type=argparse.FileType('wb'))
 
-    # push file
-    pushfile = subparsers.add_parser('push', help='Push a file in the S3Vault',
+    # TEMPLATE
+    # s3v tpl bucket/sub/path/ -t test.tpl -d test.out
+    template = subparsers.add_parser('template', aliases=('tpl',),
+                                     help='Expand a template file based on a S3Vault',
                                      parents=[common_parser])
     """ :type : argparse.ArgumentParser """
-    pushfile.add_argument('-s', '--src', dest='src', required=True,
+
+    template.add_argument('-t', '--template', dest='template', required=False,
+                          help='Template to expand from s3vault path (default stdin)',
+                          type=argparse.FileType('rb'), default='-')
+    template.add_argument('-d', '--dest', dest='dest', required=False,
+                          help='Destination file (default stdout)',
+                          type=argparse.FileType('wb'), default='-')
+
+    # s3v push bucket/sub/path/ -s object [-d object]
+    pushfile = subparsers.add_parser('obj-push', aliases=('push',),
+                                     help='Push an object in the Vault',
+                                     parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
+
+    pushfile.add_argument('-s', '--src', dest='src', required=False,
                           help='Source file to upload',
                           type=argparse.FileType('rb'))
-    pushfile.add_argument('-d', '--dest', dest='dest', required=True,
-                          help='Destination name')
+    pushfile.add_argument('-d', '--dest', dest='dest', required=False,
+                          help='Destination name (default same as source)')
 
-    # get file
-    getfile = subparsers.add_parser('get', help='Get a file in the S3Vault',
+    # s3v pull bucket/sub/path/ -s object [-d object]
+    getfile = subparsers.add_parser('obj-pull', aliases=('pull',),
+                                    help='Pull an object in the Vault',
                                     parents=[common_parser])
     """ :type : argparse.ArgumentParser """
+
     getfile.add_argument('-s', '--src', dest='src', required=True,
                          help='Source file to retrieve')
-    getfile.add_argument('-d', '--dest', dest='dest', required=True,
+    getfile.add_argument('-d', '--dest', dest='dest', required=False,
                          help='Destination name',
-                         type=argparse.FileType('wb'))
+                         type=argparse.FileType('wb'), default='-')
 
-    # set property
-    setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the S3Vault',
+    # s3v conf-set bucket/sub/path/ -c conf_object -K test -V test_value
+    setproperty = subparsers.add_parser('conf-set', aliases=('set',),
+                                        help='Set a property in a configuration file in the Vault',
                                         parents=[common_parser])
     """ :type : argparse.ArgumentParser """
+
     setproperty.add_argument('-c', '--config', dest='config', required=True,
                              help='Configuration file to manage')
     setproperty.add_argument('-K', '--key', dest='key', required=True,
@@ -101,19 +111,25 @@ def check_args():
                              choices=['int', 'string', 'list', 'dict', 'yaml', 'json'],
                              default='string',
                              help='Data type for the value')
-    # edit property
-    editproperty = subparsers.add_parser('configedit', help='Edit a configuration file in the S3Vault',
+
+    # s3v conf-edit bucket/sub/path/ -c conf_object
+    editproperty = subparsers.add_parser('conf-edit', aliases=('edit',),
+                                         help='Edit a configuration in the Vault',
                                          parents=[common_parser])
     """ :type : argparse.ArgumentParser """
+
     editproperty.add_argument('-c', '--config', dest='config', required=True,
-                              help='Configuration file to manage')
+                              help='Configuration object to edit')
     editproperty.add_argument('-t', '--type', dest='type', required=False,
                               choices=['yaml', 'json'],
                               default='yaml',
                               help='Editor type to use (yaml, json)')
-    # create session
-    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
+
+    # s3v session -r RoleAdmin
+    create_session = subparsers.add_parser('session',
+                                           help='Create a new session with assume role')
     """ :type : argparse.ArgumentParser """
+
     create_session.add_argument('--no-eid', '--no-external-id', dest='no_external_id', action='store_true',
                                 default=False,
                                 help='Disable External ID verification')
@@ -123,26 +139,30 @@ def check_args():
     cs_role.add_argument('-ra', '--role-arn', dest='role_arn', required=False,
                          help='Role Arn to assume')
 
-    # create s3vaultconfig
-    create_s3vault_config = subparsers.add_parser('create_s3vault_config',
-                                                  help='Create a new s3vault configuration file')
+    # s3v init
+    create_s3vault_config = subparsers.add_parser('init',
+                                                  help='Create a new Vault configuration file')
     """ :type : argparse.ArgumentParser """
+
     create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=True,
                                        type=argparse.FileType('wb'),
-                                       help='Config file to create')
-    # cloudformation generate
-    cloudformation_generate = subparsers.add_parser('create_cloudformation',
-                                                    help='Generate a CloudFormation template from a s3vault '
+                                       help='Config file to create (default stdout)', default='-')
+
+    # s3v cloudformation -c s3vault.yml -o s3vault.template
+    cloudformation_generate = subparsers.add_parser('cloudformation',
+                                                    help='Generate a CloudFormation template from a Vault '
                                                          'configuration')
     """ :type : argparse.ArgumentParser """
+
     cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
                                          type=argparse.FileType('rb'),
-                                         help='S3vault configuration file')
-    cloudformation_generate.add_argument('-o', '--output', dest='output_file', required=True,
+                                         help='Vault configuration file')
+    cloudformation_generate.add_argument('-o', '--output', dest='output_file', required=False,
                                          type=argparse.FileType('wb'),
-                                         help='CloudFormation output file')
+                                         help='CloudFormation output file', default='-')
     # ansible path
-    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')  # type: argparse.ArgumentParser
+    _ = subparsers.add_parser('ansible-path', aliases=('ansible_path',),
+                              help='Resolve the ansible module path')  # type: argparse.ArgumentParser
     return parser.parse_args()
 
 
