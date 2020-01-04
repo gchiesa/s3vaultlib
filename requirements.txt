@@ -11,5 +11,5 @@ dpath==1.4.2
 prompt-toolkit==2.0.7
 Pygments==2.2.0
 ruamel.yaml==0.15.85
-colorlog==4.0.2
+colorlog==4.1.0
 
