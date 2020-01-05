@@ -23,6 +23,10 @@ class S3FsException(Exception):
     pass
 
 
+class S3FsObjectNotFoundException(S3FsException):
+    pass
+
+
 class S3Fs(object):
     """
     Object that abstracts operation with encrypted objects on S3
@@ -97,7 +101,7 @@ class S3Fs(object):
         """
         s3obj = next(iter([s3fsobj for s3fsobj in self.objects if s3fsobj.name == name]), None)
         if not s3obj:
-            raise S3FsObjectException('Object not found')
+            raise S3FsObjectNotFoundException('Object not found')
         return s3obj
 
     def put_object(self, name, content, encryption_key_arn, force_dot_file=False):
