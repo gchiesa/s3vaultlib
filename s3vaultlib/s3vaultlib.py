@@ -7,8 +7,8 @@ from botocore.client import Config
 from . import __application__
 from .connection.connectionfactory import ConnectionFactory
 from .kms.kmsresolver import KMSResolver
-from .s3.s3fs import S3Fs
-from .s3.s3fsobject import S3FsObjectException, S3FsObject
+from .s3.s3fs import S3Fs, S3FsObjectNotFoundException
+from .s3.s3fsobject import S3FsObject
 from .template.templatefile import TemplateFile
 from .template.templaterenderer import TemplateRenderer
 
@@ -19,6 +19,14 @@ __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
 __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
+
+
+class S3VaultException(Exception):
+    pass
+
+
+class S3VaultObjectNotFoundException(Exception):
+    pass
 
 
 class S3Vault(object):
@@ -86,7 +94,10 @@ class S3Vault(object):
         :return: file content
         :rtype: dict
         """
-        s3fsobject = self._s3fs.get_object(name)
+        try:
+            s3fsobject = self._s3fs.get_object(name)
+        except S3FsObjectNotFoundException:
+            raise S3VaultObjectNotFoundException
         return s3fsobject.metadata
 
     def render_template(self, template_file, **kwargs):
@@ -142,7 +153,7 @@ class S3Vault(object):
         try:
             s3fsobject = self._s3fs.get_object(configfile)
             """ :type: S3FsObject """
-        except S3FsObjectException:
+        except S3FsObjectNotFoundException:
             s3fsobject = self.create_config_property(configfile, encryption_key_arn, key_alias, role_name)
         s3fsobject[key] = value
         s3fsobj = self._s3fs.update_s3fsobject(s3fsobject)
