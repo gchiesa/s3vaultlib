@@ -113,6 +113,27 @@ def test_s3fsobject_set_value_override_element():
     assert d == obj._set_value(fixture, 'level1key4.level2key1.level3key1', ['test1', 'test2', 'test3'])
 
 
+def test_s3fsobject_set_value_override_root():
+    fixture = {
+        'level1key1': 'v_level1key1',
+        'level1key2': {'level2key1': 'v_level2key1'},
+        'level1key3': [
+            'v_level2key3_0',
+            'v_level2key3_1',
+            'v_level2key3_2'
+        ],
+        'level1key4': {
+            'level2key1': {
+                'level3key1': 'v_level3key1'
+            }
+        }
+    }
+    from copy import deepcopy
+    d = ['test1', 'test2', 'test3']
+    obj = S3FsObject(s3fixtures.S3_OBJECTS['test_name']['list_objects_v2'], 'bucket', 'path', S3Mock())
+    assert d == obj._set_value(fixture, '.', ['test1', 'test2', 'test3'])
+
+
 def test_s3fsobject_set_value_add_element():
     fixture = {
         'level1key1': 'v_level1key1',
@@ -133,3 +154,5 @@ def test_s3fsobject_set_value_add_element():
     d['level1key4']['level2key2'] = {'level3key2': 'v_level3key2'}
     obj = S3FsObject(s3fixtures.S3_OBJECTS['test_name']['list_objects_v2'], 'bucket', 'path', S3Mock())
     assert d == obj._set_value(fixture, 'level1key4.level2key2', {'level3key2': 'v_level3key2'})
+
+
