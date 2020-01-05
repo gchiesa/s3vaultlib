@@ -14,8 +14,8 @@ from .cloudformation.policymanager import PolicyManager
 from .config.configmanager import ConfigManager
 from .connection.tokenfactory import TokenFactory
 from .editor.editor import Editor, EditorAbortException
-from .s3vaultlib import S3Vault
-from .utils import yaml
+from .s3vaultlib import S3Vault, S3VaultObjectNotFoundException, S3VaultException
+from .utils import yaml, io
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -37,6 +37,7 @@ __all__ = [
     "command_push",
     "command_template",
 ]
+
 
 def load_from_yaml(filename):
     if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
@@ -97,7 +98,7 @@ def command_template(args, conn_manager):
     ansible_env = copy.deepcopy(os.environ)
     environment = copy.deepcopy(os.environ)
     data = s3vault.render_template(args.template.name, ansible_env=ansible_env, environment=environment)
-    args.dest.write(data.encode())
+    io.write_with_modecheck(args.dest, data.encode())
 
 
 def command_push(args, conn_manager):
@@ -116,7 +117,7 @@ def command_get(args, conn_manager):
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
     logger.info('Retrieving file {s}'.format(s=args.src))
     logger.debug('Metadata: {m}'.format(m=s3vault.get_file_metadata(args.src)))
-    args.dest.write(s3vault.get_file(args.src))
+    io.write_with_modecheck(args.dest, s3vault.get_file(args.src))
     logger.debug('File successfully created: {d}'.format(d=args.dest.name))
 
 
@@ -135,8 +136,19 @@ def command_configedit(args, conn_manager):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
     s3vault = S3Vault(args.bucket, args.path, connection_factory=conn_manager)
     logger.info('Editing config: {s}'.format(s=args.config))
-    metadata = s3vault.get_file_metadata(args.config)
-    json_data = s3vault.get_file(args.config)
+    remote_exists = False
+    try:
+        metadata = s3vault.get_file_metadata(args.config)
+        json_data = s3vault.get_file(args.config)
+        remote_exists = True
+    except S3VaultObjectNotFoundException:
+        logger.debug('Remote config does not exists. Initializing a new one...')
+        metadata = {}
+        json_data = '{ "example": "editme" }'
+
+    if not remote_exists and not args.kms_arn and not args.kms_alias:
+        raise S3VaultException('KMS parameters required when remote config does not exists')
+
     try:
         json.loads(json_data)
     except ValueError:
@@ -157,6 +169,7 @@ def command_configedit(args, conn_manager):
     memoryfile = BytesIO(editor.result.encode())
     metadata = s3vault.put_file(src=memoryfile,
                                 dest=args.config,
+                                key_alias=args.kms_alias,
                                 encryption_key_arn=metadata.get('SSEKMSKeyId', ''))
     logger.info('Config: {c} updated successfully.'.format(c=args.config))
     logger.debug('Metadata: {m}'.format(m=metadata))
@@ -177,8 +190,9 @@ def command_createtoken(args, conn_manager):
 
 def command_createconfig(args):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    shutil.copy2(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_resources', 's3vault.example.yml'),
-                 args.output_file.name)
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_resources', 's3vault.example.yml'), 'r') as fh:
+        data = fh.read()
+    io.write_with_modecheck(args.output_file, data)
     logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))
 
 
@@ -186,8 +200,7 @@ def command_createcloudformation(args):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
     s3vault_config = ConfigManager(args.s3vault_config.name).load_config()
     policy_manager = PolicyManager(s3vault_config)
-    with open(args.output_file.name, 'wb') as cf_file:
-        cf_file.write(policy_manager.generate_cloudformation().encode('utf-8'))
+    io.write_with_modecheck(args.output_file, policy_manager.generate_cloudformation().encode('utf-8'))
     logger.info('CloudFormation template generated: {}'.format(args.output_file.name))
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import logging.config
+import os
 import sys
 
 from . import __application__
@@ -29,7 +30,7 @@ def check_args():
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-L', '--log-level', dest='log_level', required=False,
                         help='Log level to set',
-                        choices=['debug', 'info', 'warning', 'error'],
+                        choices=['debug', 'info', 'warning', 'error', 'quiet'],
                         default='info')
     parser.add_argument('--profile', dest='profile', required=False,
                         help='AWS profile to use',
@@ -44,7 +45,7 @@ def check_args():
 
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument('-b', '--bucket', dest='bucket', required=True,
-                               help='Bucket to use for S3Vault')
+                               help='Bucket to use for Vault')
     common_parser.add_argument('-p', '--path', dest='path', required=True,
                                help='Path to use in the bucket')
     kms = common_parser.add_mutually_exclusive_group()
@@ -55,40 +56,40 @@ def check_args():
                      default='',
                      help='Key arn to use to decrypt data')
 
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(title='subcommands', dest='command')
     # template
-    template = subparsers.add_parser('template', help='Expand a template file based on a S3Vault',
+    template = subparsers.add_parser('template', help='Expand a template file based on a Vault',
                                      parents=[common_parser])
     """ :type : argparse.ArgumentParser """
-    template.add_argument('-t', '--template', dest='template', required=True,
-                          help='Template to expand from s3vault path',
-                          type=argparse.FileType('rb'))
-    template.add_argument('-d', '--dest', dest='dest', required=True,
-                          help='Destination file',
-                          type=argparse.FileType('wb'))
+    template.add_argument('-t', '--template', dest='template', required=False,
+                          help='Template to expand from Vault path (default: stdin)',
+                          type=argparse.FileType('rb'), default='-')
+    template.add_argument('-d', '--dest', dest='dest', required=False,
+                          help='Destination file  (default: stdout)',
+                          type=argparse.FileType('wb'), default='-')
 
     # push file
-    pushfile = subparsers.add_parser('push', help='Push a file in the S3Vault',
+    pushfile = subparsers.add_parser('push', help='Push a file in the Vault',
                                      parents=[common_parser])
     """ :type : argparse.ArgumentParser """
-    pushfile.add_argument('-s', '--src', dest='src', required=True,
-                          help='Source file to upload',
-                          type=argparse.FileType('rb'))
+    pushfile.add_argument('-s', '--src', dest='src', required=False,
+                          help='Source file to upload ( (default: stdin)',
+                          type=argparse.FileType('rb'), default='-')
     pushfile.add_argument('-d', '--dest', dest='dest', required=True,
                           help='Destination name')
 
     # get file
-    getfile = subparsers.add_parser('get', help='Get a file in the S3Vault',
+    getfile = subparsers.add_parser('get', help='Get a file in the Vault',
                                     parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     getfile.add_argument('-s', '--src', dest='src', required=True,
                          help='Source file to retrieve')
-    getfile.add_argument('-d', '--dest', dest='dest', required=True,
-                         help='Destination name',
-                         type=argparse.FileType('wb'))
+    getfile.add_argument('-d', '--dest', dest='dest', required=False,
+                         help='Destination name  (default: stdout)',
+                         type=argparse.FileType('wb'), default='-')
 
     # set property
-    setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the S3Vault',
+    setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the Vault',
                                         parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     setproperty.add_argument('-c', '--config', dest='config', required=True,
@@ -102,7 +103,7 @@ def check_args():
                              default='string',
                              help='Data type for the value')
     # edit property
-    editproperty = subparsers.add_parser('configedit', help='Edit a configuration file in the S3Vault',
+    editproperty = subparsers.add_parser('configedit', help='Edit a configuration file in the Vault',
                                          parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     editproperty.add_argument('-c', '--config', dest='config', required=True,
@@ -125,19 +126,20 @@ def check_args():
 
     # create s3vaultconfig
     create_s3vault_config = subparsers.add_parser('create_s3vault_config',
-                                                  help='Create a new s3vault configuration file')
+                                                  help='Create a new Vault configuration file')
     """ :type : argparse.ArgumentParser """
-    create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=True,
+    create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=False,
                                        type=argparse.FileType('wb'),
-                                       help='Config file to create')
+                                       default='-',
+                                       help='Config file to create  (default: stdout)')
     # cloudformation generate
     cloudformation_generate = subparsers.add_parser('create_cloudformation',
-                                                    help='Generate a CloudFormation template from a s3vault '
+                                                    help='Generate a CloudFormation template from a Vault '
                                                          'configuration')
     """ :type : argparse.ArgumentParser """
     cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
                                          type=argparse.FileType('rb'),
-                                         help='S3vault configuration file')
+                                         help='Vault configuration file')
     cloudformation_generate.add_argument('-o', '--output', dest='output_file', required=True,
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
@@ -153,6 +155,9 @@ def configure_logging(level):
     :param level: level to set
     :return:
     """
+    log_level = level
+    if level == 'quiet':
+        log_level = 'error'
 
     dconfig = {
         'version': 1,
@@ -168,20 +173,21 @@ def configure_logging(level):
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
-                'level': level.upper(),
+                'level': log_level.upper(),
                 'formatter': 'colored',
                 'stream': 'ext://sys.stdout'
             }
         },
         'loggers': {
             __application__: {
-                'level': level.upper(),
+                'level': log_level.upper(),
                 'handlers': ['console'],
-                'propagate': False
+                'propagate': False,
+                'disabled': True if level == 'quiet' else 'False'
             }
         },
         'root': {
-            'level': level.upper(),
+            'level': log_level.upper(),
             'handlers': ['console']
         }
     }
