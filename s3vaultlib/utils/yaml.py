@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from ruamel.yaml import YAML
 from ruamel.yaml.parser import ParserError, ScannerError
-from io import StringIO
+from six import StringIO
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
