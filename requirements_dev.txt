@@ -6,7 +6,7 @@ tox
 coverage
 Sphinx==1.8.2
 cryptography
-PyYAML
+PyYAML==5.3
 pytest
 pytest-runner
 twine
