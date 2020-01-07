@@ -16,7 +16,7 @@ pytest-html
 tox-pyenv
 moto
 behave
-PyHamcrest
+PyHamcrest==1.10.0
 cfn-lint
 sphinx_rtd_theme
 ansible<2.9
