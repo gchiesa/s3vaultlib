@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
 import logging.config
-import os
 import sys
+from argparse import Namespace
 
 from . import __application__
 from . import __version__
@@ -44,10 +44,13 @@ def check_args():
                         default=False)
 
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument('-b', '--bucket', dest='bucket', required=True,
+    common_parser.add_argument('-b', '--bucket', dest='bucket', required=False,
                                help='Bucket to use for Vault')
-    common_parser.add_argument('-p', '--path', dest='path', required=True,
+    common_parser.add_argument('-p', '--path', dest='path', required=False,
                                help='Path to use in the bucket')
+    common_parser.add_argument('-u', '--uri', dest='uri', required=False,
+                               help='Uri in the vault <bucket>/<path>. This overrides bucket and path')
+
     kms = common_parser.add_mutually_exclusive_group()
     kms.add_argument('-k', '--kms-alias', dest='kms_alias', required=False,
                      default='',
@@ -145,7 +148,23 @@ def check_args():
                                          help='CloudFormation output file')
     # ansible path
     _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')  # type: argparse.ArgumentParser
-    return parser.parse_args()
+
+    args = parser.parse_args()
+
+    # validate
+    return validate_args(args)
+
+
+def validate_args(args):
+    """
+    :type args: Namespace
+    :param args:
+    :return:
+    """
+    # --uri takes precedence over bucket and path
+    if args.uri:
+        args.bucket, _, args.path = args.uri.partition('/')
+    return args
 
 
 def configure_logging(level):
