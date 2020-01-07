@@ -142,7 +142,7 @@ def command_configedit(args, conn_manager):
         json_data = s3vault.get_file(args.config)
         remote_exists = True
     except S3VaultObjectNotFoundException:
-        logger.debug('Remote config does not exists. Initializing a new one...')
+        logger.warning('Remote config does not exists. Initializing a new one...')
         metadata = {}
         json_data = '{ "example": "editme" }'
 

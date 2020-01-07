@@ -35,13 +35,15 @@ __status__ = "PerpetualBeta"
 DEFAULT_STYLE = 'native'
 
 SHORTCUTS_HELP = [
-    'CTRL + _ : Undo',
-    'CTRL + SPACE : Start Selection',
-    'CTRL + w : Cut Selection',
-    'ESC + w : Copy Selection',
-    'CTRL + y : Paste Selection',
-    'CTRL + k : Delete until end of line',
-    'CTRL + c : Exit without saving'
+    'CTRL+s          : Search forward (arrows for prev/next)',
+    'CTRL+r          : Search backwards (arrows for prev/next)',
+    'CTRL+x + CTRL+u : Undo',
+    'CTRL+SPACE      : Start Selection',
+    'CTRL+w          : Cut Selection',
+    'ESC+w           : Copy Selection',
+    'CTRL+y          : Paste Selection',
+    'CTRL+k          : Delete until end of line',
+    'CTRL+c          : Exit without saving'
 ]
 
 
@@ -163,11 +165,16 @@ class Editor(object):
     def data(self):
         tmp = json.loads(self._data)
         if self._mode == 'yaml':
-            return yaml.write_to_string(tmp)
+            text = yaml.write_to_string(tmp)
         elif self._mode == 'json':
-            return json.dumps(tmp, indent=4, separators=(',', ': '))
+            text = json.dumps(tmp, indent=4, separators=(',', ': '))
         else:
             raise EditorException('Invalid editor mode')
+        # ensure there is always room for the help dialog
+        padding_bottom = (len(SHORTCUTS_HELP) + 6) - len(text.splitlines())
+        if padding_bottom:
+            text = '{text}{padding}'.format(text=text, padding='\n' * padding_bottom)
+        return text
 
     @property
     def validator_class(self):

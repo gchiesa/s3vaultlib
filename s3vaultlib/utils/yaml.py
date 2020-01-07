@@ -13,10 +13,11 @@ __status__ = "PerpetualBeta"
 
 
 def build_parser(*args, **kwargs):
-    y = YAML(typ='safe')
+    y = YAML(typ=kwargs.get('loader', 'safe'))
     y.default_flow_style = kwargs.get('default_flow_style', False)
     y.explicit_start = kwargs.get('explicit_start', True)
-    y.indent = kwargs.get('indent', 2)
+    y.width = 4096
+    y.indent(mapping=2, sequence=4, offset=2)
     return y
 
 
@@ -26,7 +27,7 @@ def load_to_string(data):
 
 
 def write_to_string(data):
-    y = build_parser()
+    y = build_parser(loader='rt')
     dst = StringIO()
     y.dump(data, dst)
     return dst.getvalue()
@@ -34,7 +35,7 @@ def write_to_string(data):
 
 def write_to_file(data, filename):
     with open(filename, 'wb') as fh:
-        fh.write(write_to_string(data))
+        fh.write(write_to_string(data).encode())
 
 
 __all__ = [
