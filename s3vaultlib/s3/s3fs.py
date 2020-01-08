@@ -2,9 +2,10 @@
 import logging
 import os
 from io import BytesIO
-import six
+
 from humanfriendly import format_size
-from .s3fsobject import S3FsObject, S3FsObjectException
+
+from .s3fsobject import S3FsObject
 from .. import __application__
 from ..connection.connectionmanager import ConnectionManager
 

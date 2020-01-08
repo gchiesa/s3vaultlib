@@ -5,9 +5,9 @@ import json
 import logging
 import logging.config
 import os
-import shutil
 from getpass import getpass
 from io import BytesIO
+
 from humanfriendly import format_timespan
 
 from . import __application__

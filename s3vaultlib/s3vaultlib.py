@@ -8,7 +8,6 @@ from . import __application__
 from .connection.connectionmanager import ConnectionManager
 from .kms.kmsresolver import KMSResolver
 from .s3.s3fs import S3Fs, S3FsObjectNotFoundException
-from .s3.s3fsobject import S3FsObject
 from .template.templatefile import TemplateFile
 from .template.templaterenderer import TemplateRenderer
 
@@ -71,7 +70,8 @@ class S3Vault(object):
             src_file = open(src, 'rb')
         else:
             src_file = src
-        s3fsobj = self._s3fs.put_object(dest, src_file.read(), key_arn)  # type: S3FsObject
+        s3fsobj = self._s3fs.put_object(dest, src_file.read(), key_arn)
+        """ :type s3vaultlib.s3.s3fsobject.S3FsObject """
         src_file.close()
         return s3fsobj.metadata
 
@@ -83,7 +83,8 @@ class S3Vault(object):
         :return: file content
         :rtype: basestring
         """
-        s3fsobject = self._s3fs.get_object(name)  # type: S3FsObject
+        s3fsobject = self._s3fs.get_object(name)
+        """ :type s3vaultlib.s3.s3fsobject.S3FsObject """
         return s3fsobject.raw()
 
     def get_file_metadata(self, name):

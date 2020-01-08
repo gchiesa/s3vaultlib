@@ -2,7 +2,6 @@
 import argparse
 import logging.config
 import sys
-from argparse import ArgumentParser
 
 from . import __application__
 from . import __version__
@@ -148,7 +147,7 @@ def check_args():
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
     # ansible path
-    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
+    subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
     """ :type : argparse.ArgumentParser """
 
     return validate_args(parser)
@@ -196,7 +195,8 @@ def configure_logging(level):
     record_format_colored = '%(log_color)s%(message)s%(reset)s'
     if level == 'debug':
         record_format_simple = '[%(asctime)-23s] [%(levelname)-8s] [%(name)s]: %(message)s'
-        record_format_colored = '[%(asctime)-23s] %(log_color)s[%(levelname)-8s]%(reset)s %(thin_white)s[%(name)s]%(reset)s : %(message)s'
+        record_format_colored = ('[%(asctime)-23s] %(log_color)s[%(levelname)-8s]%(reset)s '
+                                 '%(thin_white)s[%(name)s]%(reset)s : %(message)s')
 
     dconfig = {
         'version': 1,

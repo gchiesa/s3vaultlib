@@ -4,9 +4,8 @@ import logging
 import os
 import uuid
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import datetime
 from stat import S_IRUSR, S_IWUSR
-from humanfriendly import format_timespan
 
 import pyboto3
 import pytz
