@@ -192,7 +192,7 @@ def command_createtoken(args, conn_manager):
 
 def command_createconfig(args):
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_resources', 's3vault.example.yml'), 'r') as fh:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '_resources', 's3vault.example.yml'), 'rb') as fh:
         data = fh.read()
     io.write_with_modecheck(args.output_file, data)
     logger.info('S3Vault configuration file created: {}'.format(args.output_file.name))

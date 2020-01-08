@@ -117,8 +117,7 @@ def check_args():
                               default='yaml',
                               help='Editor type to use (yaml, json)')
     # create session
-    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role',
-                                           parents=[common_parser])
+    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
     """ :type : argparse.ArgumentParser """
     create_session.add_argument('--no-eid', '--no-external-id', dest='no_external_id', action='store_true',
                                 default=False,
@@ -131,8 +130,7 @@ def check_args():
 
     # create s3vaultconfig
     create_s3vault_config = subparsers.add_parser('create_s3vault_config',
-                                                  help='Create a new Vault configuration file',
-                                                  parents=[common_parser])
+                                                  help='Create a new Vault configuration file')
     """ :type : argparse.ArgumentParser """
     create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=False,
                                        type=argparse.FileType('wb'),
@@ -141,7 +139,7 @@ def check_args():
     # cloudformation generate
     cloudformation_generate = subparsers.add_parser('create_cloudformation',
                                                     help='Generate a CloudFormation template from a Vault '
-                                                         'configuration', parents=[common_parser])
+                                                         'configuration')
     """ :type : argparse.ArgumentParser """
     cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
                                          type=argparse.FileType('rb'),
@@ -150,7 +148,7 @@ def check_args():
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
     # ansible path
-    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path', parents=[common_parser])
+    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
     """ :type : argparse.ArgumentParser """
 
     return validate_args(parser)
@@ -161,13 +159,15 @@ def validate_args(parser):
     :type parser: ArgumentParser
     :return:
     """
-    args = parser.parse_args()
     commands_no_bucket_required = [
         'create_session',
         'create_s3vault_config',
         'create_cloudformation',
         'ansible_path'
     ]
+    parser.set_defaults(uri='', bucket='', path='')
+
+    args = parser.parse_args()
 
     if args.command is None:
         parser.error('Please select a subcommand or --help for the usage')
