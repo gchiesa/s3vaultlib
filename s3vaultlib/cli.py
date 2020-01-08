@@ -2,7 +2,7 @@
 import argparse
 import logging.config
 import sys
-from argparse import Namespace
+from argparse import ArgumentParser
 
 from . import __application__
 from . import __version__
@@ -44,11 +44,11 @@ def check_args():
                         default=False)
 
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument('-b', '--bucket', dest='bucket', required=False,
+    common_parser.add_argument('-b', '--bucket', dest='bucket', required=False, default='',
                                help='Bucket to use for Vault')
-    common_parser.add_argument('-p', '--path', dest='path', required=False,
+    common_parser.add_argument('-p', '--path', dest='path', required=False, default='',
                                help='Path to use in the bucket')
-    common_parser.add_argument('-u', '--uri', dest='uri', required=False,
+    common_parser.add_argument('-u', '--uri', dest='uri', required=False, default='',
                                help='Uri in the vault <bucket>/<path>. This overrides bucket and path')
 
     kms = common_parser.add_mutually_exclusive_group()
@@ -116,7 +116,8 @@ def check_args():
                               default='yaml',
                               help='Editor type to use (yaml, json)')
     # create session
-    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
+    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role',
+                                           parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     create_session.add_argument('--no-eid', '--no-external-id', dest='no_external_id', action='store_true',
                                 default=False,
@@ -129,7 +130,8 @@ def check_args():
 
     # create s3vaultconfig
     create_s3vault_config = subparsers.add_parser('create_s3vault_config',
-                                                  help='Create a new Vault configuration file')
+                                                  help='Create a new Vault configuration file',
+                                                  parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=False,
                                        type=argparse.FileType('wb'),
@@ -138,7 +140,7 @@ def check_args():
     # cloudformation generate
     cloudformation_generate = subparsers.add_parser('create_cloudformation',
                                                     help='Generate a CloudFormation template from a Vault '
-                                                         'configuration')
+                                                         'configuration', parents=[common_parser])
     """ :type : argparse.ArgumentParser """
     cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
                                          type=argparse.FileType('rb'),
@@ -147,23 +149,32 @@ def check_args():
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
     # ansible path
-    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path')  # type: argparse.ArgumentParser
+    _ = subparsers.add_parser('ansible_path', help='Resolve the ansible module path', parents=[common_parser])
+    """ :type : argparse.ArgumentParser """
 
-    args = parser.parse_args()
-
-    # validate
-    return validate_args(args)
+    return validate_args(parser)
 
 
-def validate_args(args):
+def validate_args(parser):
     """
-    :type args: Namespace
-    :param args:
+    :type parser: ArgumentParser
     :return:
     """
+    args = parser.parse_args()
+
+    commands_no_bucket_required = [
+        'create_session',
+        'create_s3vault_config',
+        'create_cloudformation',
+        'ansible_path'
+    ]
+
     # --uri takes precedence over bucket and path
     if args.uri:
         args.bucket, _, args.path = args.uri.partition('/')
+
+    if not args.bucket and not args.path and (args.command not in commands_no_bucket_required):
+        parser.error('--bucket and --path required, or alternatively --uri')
     return args
 
 
