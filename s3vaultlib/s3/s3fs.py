@@ -3,6 +3,7 @@ import logging
 import os
 from io import BytesIO
 import six
+from humanfriendly import format_size
 from .s3fsobject import S3FsObject, S3FsObjectException
 from .. import __application__
 from ..connection.connectionmanager import ConnectionManager
@@ -122,7 +123,7 @@ class S3Fs(object):
             raise ValueError('object does not support . (dot) in the name')
 
         self.logger.info('Adding object: {n}, size: {s}, to bucket: {b}, path: {p}'.format(n=name,
-                                                                                           s=len(content),
+                                                                                           s=format_size(len(content)),
                                                                                            b=self._bucket,
                                                                                            p=self._path))
         object_body = BytesIO(content)
