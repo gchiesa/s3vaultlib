@@ -24,7 +24,7 @@ class JSONValidator(Validator):
         try:
             json.loads(document.text)
         except ValueError as e:
-            matches = re.compile('.*\(char\s(\d+).*').findall(e.message)
+            matches = re.compile('.*\(char\s(\d+).*').findall(str(e))
             position = int(matches[0]) if matches else 0
             raise ValidationError(message=six.text_type(str(e)), cursor_position=int(position))
         except Exception:
@@ -34,7 +34,7 @@ class JSONValidator(Validator):
 class YAMLValidator(Validator):
     def validate(self, document):
         try:
-            yaml.load_to_string(document.text)
+            yaml.load_from_stream(document.text)
         except (ParserError, ScannerError) as e:
             raise ValidationError(message=six.text_type(str(e.problem)), cursor_position=e.problem_mark.index)
         except Exception:

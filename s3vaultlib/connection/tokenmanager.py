@@ -4,8 +4,9 @@ import logging
 import os
 import uuid
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from stat import S_IRUSR, S_IWUSR
+from humanfriendly import format_timespan
 
 import pyboto3
 import pytz
@@ -13,7 +14,7 @@ from botocore.client import Config
 from dateutil import parser
 
 from s3vaultlib import __application__
-from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionmanager import ConnectionManager
 from s3vaultlib.metadata.factory import MetadataFactory
 from .defaults import DEFAULT_TOKEN_FILENAME
 
@@ -26,11 +27,11 @@ __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
 
 
-class TokenFactoryException(Exception):
+class TokenManagerException(Exception):
     pass
 
 
-class TokenFactory(object):
+class TokenManager(object):
     TOKEN_FILENAME = DEFAULT_TOKEN_FILENAME
 
     def __init__(self, role_name=None, role_arn=None, external_id=None, connection_factory=None, is_ec2=False):
@@ -41,7 +42,7 @@ class TokenFactory(object):
         self._client = None
         self._connection_factory = connection_factory
         if not self._connection_factory:
-            self._connection_factory = ConnectionFactory(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
+            self._connection_factory = ConnectionManager(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
 
     @property
     def role_arn(self):
@@ -53,13 +54,16 @@ class TokenFactory(object):
         metadata = MetadataFactory().get_instance(is_ec2=self._connection_factory.is_ec2,
                                                   session_info=self._connection_factory.session_info)
         if not self._role_arn and not self._role_name:
-            raise TokenFactoryException('TokenFactory requires either role name or role arn to perform the action.')
+            raise TokenManagerException('TokenManager requires either role name or role arn to perform the action.')
         if self._role_arn:
             return self._role_arn
         return 'arn:aws:iam::{account_id}:role/{role_name}'.format(account_id=metadata.account_id,
                                                                    role_name=self._role_name)
 
     def generate_token(self):
+        # delete the token if exists
+        self._delete_token()
+        # generate a new session
         client = self._connection_factory.client('sts')  # type: pyboto3.sts
         role_args = {
             'RoleArn': self.role_arn,
@@ -74,7 +78,7 @@ class TokenFactory(object):
         except Exception as e:
             self.logger.error('Error while assuming role with info: {i}. Type: {t}. Error: '
                               '{e}'.format(i=role_args, t=str(type(e)), e=str(e)))
-            raise TokenFactoryException(e)
+            raise TokenManagerException(e)
 
         # convert the date to string
         token_dict['Expiration'] = str(token_dict['Expiration'])
@@ -85,6 +89,11 @@ class TokenFactory(object):
         with open(os.path.expanduser(self.TOKEN_FILENAME), 'wb') as f_token:
             f_token.write(json.dumps(token_dict).encode())
         os.chmod(os.path.expanduser(self.TOKEN_FILENAME), S_IRUSR | S_IWUSR)
+
+    def _delete_token(self):
+        token_file = os.path.expanduser(self.TOKEN_FILENAME)
+        if os.path.exists(token_file):
+            os.unlink(os.path.expanduser(self.TOKEN_FILENAME))
 
     def _read_token(self):
         if not os.path.exists(os.path.expanduser(self.TOKEN_FILENAME)):
@@ -99,6 +108,11 @@ class TokenFactory(object):
         # convert the date
         token_dict['Expiration'] = parser.parse(token_dict['Expiration'])
         return token_dict
+
+    @staticmethod
+    def remaining_seconds(token_dict):
+        t_delta = token_dict['Expiration'] - datetime.now(tz=pytz.utc)
+        return t_delta.seconds
 
     @staticmethod
     def _is_valid_token(token_dict):

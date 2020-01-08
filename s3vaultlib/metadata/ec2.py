@@ -39,7 +39,7 @@ class EC2Metadata(MetadataBase):
         try:
             response = requests.get(url, timeout=5)
         except Exception:
-            self.logger.exception('Error while getting metadata. Perhaps you want to use --no-ec2 flag?')
+            self.logger.error('Error while getting metadata. Perhaps you want to use --no-ec2 flag?')
             raise
         if not response.ok:
             raise EC2MetadataException('Error while reading metadata from path')

@@ -9,7 +9,7 @@ import boto3
 from behave import given, when, then
 
 from conf import WORKSPACE, FIXTURES_PATH
-from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionmanager import ConnectionManager
 from s3vaultlib.s3vaultlib import S3Vault
 
 __author__ = "Giuseppe Chiesa"
@@ -33,7 +33,7 @@ def step_impl(context, file_name):
 @when('we want upload {file_name} in bucket {s3bucket} at path {s3path} with name {s3filename} '
       'encrypted with key alias {kms_key}')
 def step_impl(context, file_name, s3bucket, s3path, s3filename, kms_key):
-    conn = ConnectionFactory('eu-west-1')
+    conn = ConnectionManager('eu-west-1')
     s3v = S3Vault(s3bucket, s3path, conn)
     s3v.put_file(os.path.join(WORKSPACE, file_name), s3filename, key_alias=kms_key)
 
@@ -94,7 +94,7 @@ def step_impl(context, s3bucket, s3path, s3filename, content):
 
 @when("we get the file from {s3bucket} at path {s3path} with name {s3filename}")
 def step_impl(context, s3bucket, s3path, s3filename):
-    conn = ConnectionFactory('eu-west-1')
+    conn = ConnectionManager('eu-west-1')
     s3v = S3Vault(s3bucket, s3path, conn)
     d = s3v.get_file(s3filename)
     checksum = hashlib.md5()
@@ -125,7 +125,7 @@ def step_impl(context, s3bucket, s3path, s3filename, fixture_name):
 
 @when("we render the template with content {tpl_content}")
 def step_impl(context, tpl_content):
-    conn = ConnectionFactory('eu-west-1')
+    conn = ConnectionManager('eu-west-1')
     s3v = S3Vault(context.s3bucket, context.s3path, conn)
     tplname = '{}'.format(os.path.join(WORKSPACE, 'tpl'))
     with open(tplname, 'wb') as tplf:

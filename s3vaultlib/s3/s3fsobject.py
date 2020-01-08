@@ -133,6 +133,9 @@ class S3FsObject(object):
 
     @staticmethod
     def _set_value(d, path, value):
+        if path == '.':
+            d = value
+            return d
         levels = path.split('.')
         leaf_key = levels.pop()
         tmp_dict = {leaf_key: value}

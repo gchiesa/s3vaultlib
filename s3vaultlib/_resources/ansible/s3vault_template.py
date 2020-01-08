@@ -5,7 +5,7 @@ import copy
 import logging
 from ansible.module_utils.basic import AnsibleModule
 from s3vaultlib.metadata.ec2 import EC2Metadata
-from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionmanager import ConnectionManager
 from s3vaultlib.s3vaultlib import S3Vault
 
 logging.basicConfig(level=logging.DEBUG)
@@ -45,7 +45,7 @@ description:
         dest=dict(type='str', required=True),
 
 options:
-    bucket: 
+    bucket:
         description:
             - The S3 bucket where the S3Vault resides
     path:
@@ -58,23 +58,23 @@ options:
     region:
         description:
             - The region to use
-    profile: 
-        description: 
-            - Profile to use            
-    mode: 
-        description: 
-            - Mode (numeric) to associate to the created destination file (default 0666)             
-    owner: 
-        description: 
-            - User to associate to the created destination file             
-    group: 
-        description: 
-            - Group to associate to the created destination file               
-    src:        
-        description: 
+    profile:
+        description:
+            - Profile to use
+    mode:
+        description:
+            - Mode (numeric) to associate to the created destination file (default 0666)
+    owner:
+        description:
+            - User to associate to the created destination file
+    group:
+        description:
+            - Group to associate to the created destination file
+    src:
+        description:
             - The source template to expand
-    dest:        
-        description: 
+    dest:
+        description:
             - The destination file where to expand the template
 
 author:
@@ -149,7 +149,7 @@ def run_module():
     else:
         vault_path = module.params['path']
 
-    conn_manager = ConnectionFactory(region=module.params['region'], profile_name=module.params['profile'])
+    conn_manager = ConnectionManager(region=module.params['region'], profile_name=module.params['profile'])
     s3vault = S3Vault(module.params['bucket'], vault_path, connection_factory=conn_manager)
 
     ansible_env = copy.deepcopy(os.environ)

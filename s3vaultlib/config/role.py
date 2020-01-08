@@ -111,6 +111,6 @@ class Role(object):
                                 'first')
             return ''
         if not self._kms_arn:
-            kms_resolver = KMSResolver(connection_factory=self._connection_factory, keyalias=self.kms_alias)
+            kms_resolver = KMSResolver(connection_manager=self._connection_factory, keyalias=self.kms_alias)
             self._kms_arn = kms_resolver.retrieve_key_arn()
         return self._kms_arn

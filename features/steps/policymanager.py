@@ -30,6 +30,7 @@ def step_impl(context):
     retcode = subprocess.check_call([
         'cfn-lint',
         '--ignore-checks', 'W3005',
+        '--ignore-checks', 'W3011',
         '--template', '{}'.format(os.path.join(WORKSPACE, 'template.out'))
     ])
     assert_that(retcode, equal_to(0))
