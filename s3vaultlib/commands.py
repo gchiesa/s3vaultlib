@@ -8,11 +8,12 @@ import os
 import shutil
 from getpass import getpass
 from io import BytesIO
+from humanfriendly import format_timespan
 
 from . import __application__
 from .cloudformation.policymanager import PolicyManager
 from .config.configmanager import ConfigManager
-from .connection.tokenfactory import TokenFactory
+from .connection.tokenmanager import TokenManager
 from .editor.editor import Editor, EditorAbortException
 from .s3vaultlib import S3Vault, S3VaultObjectNotFoundException, S3VaultException
 from .utils import yaml, io
@@ -43,7 +44,7 @@ def load_from_yaml(filename):
     if not os.path.expanduser(filename) or not os.access(filename, os.R_OK):
         raise Exception('Unable to read file: {}'.format(filename))
     with open(filename, 'r') as fh:
-        data = yaml.load_to_string(fh)
+        data = yaml.load_from_stream(fh)
     return data
 
 
@@ -181,11 +182,12 @@ def command_createtoken(args, conn_manager):
     if not args.no_external_id:
         # prompt external id for verification
         external_id = getpass('External ID:')
-    token_factory = TokenFactory(role_name=args.role_name, role_arn=args.role_arn, external_id=external_id,
+    token_factory = TokenManager(role_name=args.role_name, role_arn=args.role_arn, external_id=external_id,
                                  connection_factory=conn_manager)
     token_factory.generate_token()
     if token_factory.token:
-        logger.info('Token created successfully. Expiration: {e}'.format(e=str(token_factory.token['Expiration'])))
+        logger.info('Token created successfully. Expiration in: '
+                    '{e}'.format(e=format_timespan(token_factory.remaining_seconds(token_factory.token))))
 
 
 def command_createconfig(args):

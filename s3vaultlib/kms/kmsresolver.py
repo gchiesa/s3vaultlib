@@ -3,7 +3,7 @@ import logging
 
 from s3vaultlib import __application__
 from s3vaultlib.metadata.factory import MetadataFactory
-from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionmanager import ConnectionManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -24,14 +24,14 @@ class KMSResolver(object):
     load a keyarn with a specified alias
     """
 
-    def __init__(self, connection_factory, keyalias='', role_name=''):
+    def __init__(self, connection_manager, keyalias='', role_name=''):
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
 
-        self._connection_factory = connection_factory
-        """ :type : s3vaultlib.connection.connectionfactory.ConnectionFactory """
+        self._connection_manager = connection_manager
+        """ :type ConnectionManager """
         self._keyalias = keyalias
         self._role = role_name
-        self._kms = self._connection_factory.client('kms')
+        self._kms = self._connection_manager.client('kms')
         """ :type : pyboto3.kms """
 
     def _get_key_from_alias(self, alias):
@@ -61,8 +61,8 @@ class KMSResolver(object):
         if key_arn:
             return key_arn
 
-        metadata = MetadataFactory().get_instance(is_ec2=self._connection_factory.is_ec2,
-                                                  session_info=self._connection_factory.session_info)
+        metadata = MetadataFactory().get_instance(is_ec2=self._connection_manager.is_ec2,
+                                                  session_info=self._connection_manager.session_info)
         try:
             role = metadata.role
         except Exception as e:

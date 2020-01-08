@@ -5,7 +5,7 @@ from io import BytesIO
 import six
 from .s3fsobject import S3FsObject, S3FsObjectException
 from .. import __application__
-from ..connection.connectionfactory import ConnectionFactory
+from ..connection.connectionmanager import ConnectionManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -35,7 +35,7 @@ class S3Fs(object):
         """
 
         :param connection_factory: connection_factory object
-        :type connection_factory: ConnectionFactory
+        :type connection_factory: ConnectionManager
         :param bucket: S3 bucket
         :param path: bucket path
         """

@@ -7,8 +7,8 @@ from argparse import ArgumentParser
 from . import __application__
 from . import __version__
 from .commands import *
-from .connection.connectionfactory import ConnectionFactory
-from .connection.tokenfactory import TokenFactory
+from .connection.connectionmanager import ConnectionManager
+from .connection.tokenmanager import TokenManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -26,7 +26,8 @@ def check_args():
     :return: args object
     """
 
-    parser = argparse.ArgumentParser(prog='s3vaultcli', description='s3vaultcli')
+    parser = argparse.ArgumentParser(prog='s3v', description='S3Vault command line interface',
+                                     epilog='Created by Giuseppe Chiesa - https://github.com/gchiesa/s3vaultlib')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-L', '--log-level', dest='log_level', required=False,
                         help='Log level to set',
@@ -161,13 +162,15 @@ def validate_args(parser):
     :return:
     """
     args = parser.parse_args()
-
     commands_no_bucket_required = [
         'create_session',
         'create_s3vault_config',
         'create_cloudformation',
         'ansible_path'
     ]
+
+    if args.command is None:
+        parser.error('Please select a subcommand or --help for the usage')
 
     # --uri takes precedence over bucket and path
     if args.uri:
@@ -189,15 +192,21 @@ def configure_logging(level):
     if level == 'quiet':
         log_level = 'error'
 
+    record_format_simple = '[%(levelname)-8s]: %(message)s'
+    record_format_colored = '%(log_color)s%(message)s%(reset)s'
+    if level == 'debug':
+        record_format_simple = '[%(asctime)-23s] [%(levelname)-8s] [%(name)s]: %(message)s'
+        record_format_colored = '[%(asctime)-23s] %(log_color)s[%(levelname)-8s]%(reset)s %(thin_white)s[%(name)s]%(reset)s : %(message)s'
+
     dconfig = {
         'version': 1,
         'formatters': {
             'simple': {
-                'format': '[%(levelname)-8s] [%(name)s]: %(message)s'
+                'format': record_format_simple
             },
             'colored': {
                 '()': 'colorlog.ColoredFormatter',
-                'format': '%(log_color)s[%(levelname)-8s]%(reset)s %(thin_white)s[%(name)s]%(reset)s : %(message)s'
+                'format': record_format_colored
             }
         },
         'handlers': {
@@ -230,33 +239,39 @@ def main():
 
     :return:
     """
+    def get_connection(with_token=True):
+        token_factory = TokenManager(is_ec2=is_ec2(args))
+        if with_token:
+            conn_manager = ConnectionManager(region=args.region, profile_name=args.profile, token=token_factory.token,
+                                             is_ec2=is_ec2(args))
+        else:
+            conn_manager = ConnectionManager(region=args.region, profile_name=args.profile, is_ec2=is_ec2(args))
+        return conn_manager
+
     args = check_args()
     configure_logging(args.log_level)
     logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=__name__))
-    token_factory = TokenFactory(is_ec2=is_ec2(args))
-    conn_manager = ConnectionFactory(region=args.region, profile_name=args.profile, token=token_factory.token,
-                                     is_ec2=is_ec2(args))
 
     exception_message = 'Unknown exception.'
     try:
         if args.command == 'template':
             exception_message = 'Error while expanding the template.'
-            command_template(args, conn_manager)
+            command_template(args, get_connection())
         elif args.command == 'push':
             exception_message = 'Error while pushing file.'
-            command_push(args, conn_manager)
+            command_push(args, get_connection())
         elif args.command == 'get':
             exception_message = 'Error while getting file.'
-            command_get(args, conn_manager)
+            command_get(args, get_connection())
         elif args.command == 'configset':
             exception_message = 'Error while setting property.'
-            command_configset(args, conn_manager)
+            command_configset(args, get_connection())
         elif args.command == 'configedit':
             exception_message = 'Error while editing configuration.'
-            command_configedit(args, conn_manager)
+            command_configedit(args, get_connection())
         elif args.command == 'create_session':
             exception_message = 'Error while setting the token.'
-            command_createtoken(args, conn_manager)
+            command_createtoken(args, get_connection(with_token=False))
         elif args.command == 'create_s3vault_config':
             exception_message = 'Error while creating s3vault config example.'
             command_createconfig(args)

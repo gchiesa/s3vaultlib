@@ -12,3 +12,4 @@ prompt-toolkit==2.0.7
 Pygments==2.2.0
 ruamel.yaml==0.16.5
 colorlog==4.0.2
+humanfriendly==4.18

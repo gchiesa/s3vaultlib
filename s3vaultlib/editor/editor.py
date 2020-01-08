@@ -187,7 +187,7 @@ class Editor(object):
     def _validate(self, result):
         try:
             if self._mode == 'yaml':
-                return yaml.load_to_string(result)
+                return yaml.load_from_stream(result)
             elif self._mode == 'json':
                 return json.loads(result)
         except ParserError:

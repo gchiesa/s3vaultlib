@@ -21,9 +21,9 @@ def build_parser(*args, **kwargs):
     return y
 
 
-def load_to_string(data):
+def load_from_stream(stream):
     y = build_parser()
-    return y.load(data)
+    return y.load(stream)
 
 
 def write_to_string(data):
@@ -40,7 +40,7 @@ def write_to_file(data, filename):
 
 __all__ = [
     'build_parser',
-    'load_to_string',
+    'load_from_stream',
     'write_to_string',
     'write_to_file',
     'ParserError',

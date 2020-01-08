@@ -17,7 +17,7 @@ __email__ = "mail@giuseppechiesa.it"
 __status__ = "PerpetualBeta"
 
 
-class ConnectionFactory(object):
+class ConnectionManager(object):
     """
     Object that allocate connection by supporting also connection profile and extended paramaters
     """
@@ -64,12 +64,15 @@ class ConnectionFactory(object):
                                  'aws_session_token': token['SessionToken'],
                                  'region_name': token['Region']
                                  }
+        # command line passed region takes precedence
+        if self.region:
+            self.session_info['region_name'] = self.region
 
         if conn_type not in ['both', 'resource', 'client']:
             raise ValueError('connection: {c} not supported'.format(c=conn_type))
 
         session = boto3.session.Session(**self.session_info)
-        self.logger.info('Using identity arn: {a}'.format(a=self._get_identity_arg(session)))
+        self.logger.info('Using identity: {a}'.format(a=self._get_identity_arg(session)))
 
         if not self.region:
             metadata = MetadataFactory().get_instance(self._is_ec2, session_info=self.session_info)

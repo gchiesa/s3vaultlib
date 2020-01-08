@@ -34,7 +34,7 @@ class ConfigManager(object):
         data = {}
         try:
             with open(self._config_file, 'r') as fin:
-                data = yaml.load_to_string(fin.read())
+                data = yaml.load_from_stream(fin.read())
         except (ParserError, ScannerError) as e:
             self.logger.error('Unable to load config file. Error is: {}'.format(str(e)))
 

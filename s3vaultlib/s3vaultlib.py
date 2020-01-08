@@ -5,7 +5,7 @@ import six
 from botocore.client import Config
 
 from . import __application__
-from .connection.connectionfactory import ConnectionFactory
+from .connection.connectionmanager import ConnectionManager
 from .kms.kmsresolver import KMSResolver
 from .s3.s3fs import S3Fs, S3FsObjectNotFoundException
 from .s3.s3fsobject import S3FsObject
@@ -40,14 +40,14 @@ class S3Vault(object):
         :param bucket: bucket
         :param path: path
         :param connection_factory: connection factory
-        :type connection_factory: ConnectionFactory
+        :type connection_factory: ConnectionManager
         """
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._bucket = bucket
         self._path = path
         self._connection_manager = connection_factory
         if not self._connection_manager:
-            self._connection_manager = ConnectionFactory(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
+            self._connection_manager = ConnectionManager(config=Config(signature_version='s3v4'), is_ec2=is_ec2)
         self._s3fs = S3Fs(self._connection_manager, self._bucket, self._path)
 
     def put_file(self, src, dest, encryption_key_arn='', key_alias='', role_name=''):

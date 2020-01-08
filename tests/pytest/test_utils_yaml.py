@@ -4,7 +4,9 @@
 import pytest
 
 from s3vaultlib.editor.utils import extract_tokens, yaml_fixer
-from s3vaultlib.utils.yaml import write_to_string
+from s3vaultlib.utils.yaml import write_to_string, load_from_stream
+import json
+from ruamel.yaml.comments import CommentedMap as OrderedDict
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -21,7 +23,7 @@ __status__ = "PerpetualBeta"
         u'--- test123\n...\n'
     ),
     (
-        {'key1': 1, 'key2': 2, 'key3': 3, 'key4': [41, 42, '43']},
+        OrderedDict([('key1', 1), ('key2', 2), ('key3', 3), ('key4', [41, 42, '43'])]),
         '''---
 key1: 1
 key2: 2

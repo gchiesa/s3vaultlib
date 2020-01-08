@@ -11,7 +11,7 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action import ActionBase
 from ansible.template import generate_ansible_template_vars
 from s3vaultlib.metadata.factory import MetadataFactory
-from s3vaultlib.connection.connectionfactory import ConnectionFactory
+from s3vaultlib.connection.connectionmanager import ConnectionManager
 from s3vaultlib.s3vaultlib import S3Vault
 
 __author__ = "Giuseppe Chiesa"
@@ -124,7 +124,7 @@ class ActionModule(ActionBase):
             else:
                 vault_path = path
 
-            conn_manager = ConnectionFactory(region=region, profile_name=profile)
+            conn_manager = ConnectionManager(region=region, profile_name=profile)
             s3vault = S3Vault(bucket, vault_path, connection_factory=conn_manager)
 
             resultant = s3vault.render_template(tmp_source, **temp_vars)
