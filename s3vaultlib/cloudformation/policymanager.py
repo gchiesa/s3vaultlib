@@ -6,9 +6,8 @@ from collections import OrderedDict
 
 from jinja2 import Environment, FileSystemLoader
 from string_utils import snake_case_to_camel
-
+from ..connection.connectionmanager import ConnectionManager
 from s3vaultlib import __application__
-from s3vaultlib.config.configmanager import ConfigManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -34,8 +33,12 @@ def cloudformation_prettyprint(json_string):
 
 class PolicyManager(object):
     def __init__(self, config_manager):
+        """
+        :type config_manager: ConnectionManager
+        :param config_manager:
+        """
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
-        self._config_manager = config_manager  # type: ConfigManager
+        self._config_manager = config_manager
         self._j2env = Environment(loader=FileSystemLoader(os.path.join(BASE_PATH, '_resources', 'templates')),
                                   trim_blocks=True, autoescape=False)
         self._j2env.filters['cfsanitize'] = cloudformation_sanitize_string

@@ -150,8 +150,7 @@ class S3Vault(object):
         :rtype: basestring
         """
         try:
-            s3fsobject = self._s3fs.get_object(configfile)
-            """ :type: S3FsObject """
+            s3fsobject = self._s3fs.get_object(configfile)  # type: s3fsobject.S3FsObject
         except S3FsObjectNotFoundException:
             s3fsobject = self.create_config_property(configfile, encryption_key_arn, key_alias, role_name)
         s3fsobject[key] = value

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import logging
-from .base import MetadataBase
+
 from s3vaultlib import __application__
-import boto3
+from .base import MetadataBase
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -31,7 +31,7 @@ class LocalMetadata(MetadataBase):
             response = self._client.get_caller_identity()
             _id = response['Account']
         except Exception as e:
-            self.logger.error('Error while retrieving account_id.')
+            self.logger.error('Error while retrieving account_id. Error is: {}'.format(str(e)))
             raise
         return _id
 

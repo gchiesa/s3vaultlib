@@ -5,7 +5,17 @@ import sys
 
 from . import __application__
 from . import __version__
-from .commands import *
+from .commands import (
+    command_createcloudformation,
+    command_ansiblepath,
+    command_createconfig,
+    command_createtoken,
+    command_configedit,
+    command_configset,
+    command_get,
+    command_push,
+    command_template, is_ec2
+)
 from .connection.connectionmanager import ConnectionManager
 from .connection.tokenmanager import TokenManager
 
@@ -62,8 +72,7 @@ def check_args():
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
     # template
     template = subparsers.add_parser('template', help='Expand a template file based on a Vault',
-                                     parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
+                                     parents=[common_parser])  # type: argparse.ArgumentParser
     template.add_argument('-t', '--template', dest='template', required=False,
                           help='Template to expand from Vault path (default: stdin)',
                           type=argparse.FileType('rb'), default='-')
@@ -73,8 +82,7 @@ def check_args():
 
     # push file
     pushfile = subparsers.add_parser('push', help='Push a file in the Vault',
-                                     parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
+                                     parents=[common_parser])  # type: argparse.ArgumentParser
     pushfile.add_argument('-s', '--src', dest='src', required=False,
                           help='Source file to upload ( (default: stdin)',
                           type=argparse.FileType('rb'), default='-')
@@ -83,8 +91,7 @@ def check_args():
 
     # get file
     getfile = subparsers.add_parser('get', help='Get a file in the Vault',
-                                    parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
+                                    parents=[common_parser])  # type: argparse.ArgumentParser
     getfile.add_argument('-s', '--src', dest='src', required=True,
                          help='Source file to retrieve')
     getfile.add_argument('-d', '--dest', dest='dest', required=False,

@@ -108,11 +108,11 @@ class Editor(object):
         self._bindings = KeyBindings()
 
         @self._bindings.add('tab')
-        def _(event):
+        def tab_event(event):
             event.app.current_buffer.insert_text('  ')
 
         @self._bindings.add('f1')
-        def _(event):
+        def f1_event(event):
             title = 'Shortcuts Help'
             text = '\n'.join(SHORTCUTS_HELP)
             self._show_message(event.app, title=title, text=text)
