@@ -3,7 +3,6 @@ import logging
 
 from s3vaultlib import __application__
 from s3vaultlib.metadata.factory import MetadataFactory
-from s3vaultlib.connection.connectionmanager import ConnectionManager
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -28,7 +27,7 @@ class KMSResolver(object):
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
 
         self._connection_manager = connection_manager
-        """ :type ConnectionManager """
+        """ :type s3vaultlib.connection.connectionmanager.ConnectionManager """
         self._keyalias = keyalias
         self._role = role_name
         self._kms = self._connection_manager.client('kms')
