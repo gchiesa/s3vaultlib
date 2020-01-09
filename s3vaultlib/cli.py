@@ -93,8 +93,7 @@ def check_args():
 
     # set property
     setproperty = subparsers.add_parser('configset', help='Set a property in a configuration file in the Vault',
-                                        parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
+                                        parents=[common_parser])  # type: argparse.ArgumentParser
     setproperty.add_argument('-c', '--config', dest='config', required=True,
                              help='Configuration file to manage')
     setproperty.add_argument('-K', '--key', dest='key', required=True,
@@ -107,8 +106,7 @@ def check_args():
                              help='Data type for the value')
     # edit property
     editproperty = subparsers.add_parser('configedit', help='Edit a configuration file in the Vault',
-                                         parents=[common_parser])
-    """ :type : argparse.ArgumentParser """
+                                         parents=[common_parser])  # type: argparse.ArgumentParser
     editproperty.add_argument('-c', '--config', dest='config', required=True,
                               help='Configuration file to manage')
     editproperty.add_argument('-t', '--type', dest='type', required=False,
@@ -116,8 +114,7 @@ def check_args():
                               default='yaml',
                               help='Editor type to use (yaml, json)')
     # create session
-    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')
-    """ :type : argparse.ArgumentParser """
+    create_session = subparsers.add_parser('create_session', help='Create a new session with assume role')  # type: argparse.ArgumentParser
     create_session.add_argument('--no-eid', '--no-external-id', dest='no_external_id', action='store_true',
                                 default=False,
                                 help='Disable External ID verification')
@@ -129,8 +126,7 @@ def check_args():
 
     # create s3vaultconfig
     create_s3vault_config = subparsers.add_parser('create_s3vault_config',
-                                                  help='Create a new Vault configuration file')
-    """ :type : argparse.ArgumentParser """
+                                                  help='Create a new Vault configuration file')  # type: argparse.ArgumentParser
     create_s3vault_config.add_argument('-o', '--output', dest='output_file', required=False,
                                        type=argparse.FileType('wb'),
                                        default='-',
@@ -138,8 +134,7 @@ def check_args():
     # cloudformation generate
     cloudformation_generate = subparsers.add_parser('create_cloudformation',
                                                     help='Generate a CloudFormation template from a Vault '
-                                                         'configuration')
-    """ :type : argparse.ArgumentParser """
+                                                         'configuration')  # type: argparse.ArgumentParser
     cloudformation_generate.add_argument('-c', '--config', dest='s3vault_config', required=True,
                                          type=argparse.FileType('rb'),
                                          help='Vault configuration file')
@@ -147,8 +142,7 @@ def check_args():
                                          type=argparse.FileType('wb'),
                                          help='CloudFormation output file')
     # ansible path
-    subparsers.add_parser('ansible_path', help='Resolve the ansible module path')
-    """ :type : argparse.ArgumentParser """
+    subparsers.add_parser('ansible_path', help='Resolve the ansible module path')  # type: argparse.ArgumentParser
 
     return validate_args(parser)
 

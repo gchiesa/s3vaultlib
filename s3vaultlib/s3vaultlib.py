@@ -83,8 +83,7 @@ class S3Vault(object):
         :return: file content
         :rtype: basestring
         """
-        s3fsobject = self._s3fs.get_object(name)
-        """ :type s3vaultlib.s3.s3fsobject.S3FsObject """
+        s3fsobject = self._s3fs.get_object(name)  # type: s3fsobject.S3FsObject
         return s3fsobject.raw()
 
     def get_file_metadata(self, name):
