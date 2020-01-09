@@ -20,7 +20,8 @@ __status__ = "PerpetualBeta"
 
 
 class JSONValidator(Validator):
-    def validate(self, document):
+    @staticmethod
+    def validate(document):
         try:
             json.loads(document.text)
         except ValueError as e:

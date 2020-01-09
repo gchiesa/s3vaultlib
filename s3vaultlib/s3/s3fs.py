@@ -42,7 +42,6 @@ class S3Fs(object):
         :param path: bucket path
         """
         self._connection_factory = connection_factory
-        """ :type : ConnectionFactory """
         self.logger = logging.getLogger('{a}.{m}'.format(a=__application__, m=self.__class__.__name__))
         self._bucket = bucket
         self._path = path

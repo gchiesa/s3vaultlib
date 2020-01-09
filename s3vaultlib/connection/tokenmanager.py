@@ -7,7 +7,6 @@ from copy import deepcopy
 from datetime import datetime
 from stat import S_IRUSR, S_IWUSR
 
-import pyboto3
 import pytz
 from botocore.client import Config
 from dateutil import parser
@@ -63,7 +62,8 @@ class TokenManager(object):
         # delete the token if exists
         self._delete_token()
         # generate a new session
-        client = self._connection_factory.client('sts')  # type: pyboto3.sts
+        client = self._connection_factory.client('sts')
+        """ :type: pyboto3.sts """
         role_args = {
             'RoleArn': self.role_arn,
             'RoleSessionName': 's3vault_{}'.format(str(uuid.uuid4()).replace('-', '')),

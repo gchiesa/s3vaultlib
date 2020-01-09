@@ -40,7 +40,7 @@ class ConnectionManager(object):
 
     def _get_identity_arg(self, session):
         client = session.client('sts')
-        """ :type : pyboto3.sts """
+        """ :type: pyboto3.sts """
         try:
             response = client.get_caller_identity()
             arn = response['Arn']

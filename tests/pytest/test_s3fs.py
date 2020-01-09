@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import os
 
 import pytest
+import six
 
 from s3vaultlib.s3.s3fs import S3Fs
 from s3vaultlib.s3.s3fsobject import S3FsObject, S3FsObjectException
 from .fixtures import s3 as s3fixtures
 from .mock.s3 import S3Mock
-import six
 
 __author__ = "Giuseppe Chiesa"
 __copyright__ = "Copyright 2017, Giuseppe Chiesa"
@@ -128,7 +127,6 @@ def test_s3fsobject_set_value_override_root():
             }
         }
     }
-    from copy import deepcopy
     d = ['test1', 'test2', 'test3']
     obj = S3FsObject(s3fixtures.S3_OBJECTS['test_name']['list_objects_v2'], 'bucket', 'path', S3Mock())
     assert d == obj._set_value(fixture, '.', ['test1', 'test2', 'test3'])

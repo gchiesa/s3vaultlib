@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import logging
-import six
 import abc
+
+import six
 from boto3 import session
 
 __author__ = "Giuseppe Chiesa"
