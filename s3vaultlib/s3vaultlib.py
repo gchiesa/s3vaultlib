@@ -70,8 +70,7 @@ class S3Vault(object):
             src_file = open(src, 'rb')
         else:
             src_file = src
-        s3fsobj = self._s3fs.put_object(dest, src_file.read(), key_arn)
-        """ :type s3vaultlib.s3.s3fsobject.S3FsObject """
+        s3fsobj = self._s3fs.put_object(dest, src_file.read(), key_arn)  # type: s3fsobject.S3FsObject
         src_file.close()
         return s3fsobj.metadata
 
