@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 
-import cgi
+import html
 import json
 import logging
 import sys
@@ -25,7 +25,7 @@ from ..utils import yaml
 from ..utils.yaml import ParserError
 
 __author__ = "Giuseppe Chiesa"
-__copyright__ = "Copyright 2017, Giuseppe Chiesa"
+__copyright__ = "Copyright 2017-2021, Giuseppe Chiesa"
 __credits__ = ["Giuseppe Chiesa"]
 __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
@@ -147,17 +147,17 @@ class Editor(object):
 
     def bottom_bar(self):
         data = [
-            '<b>{}</b>'.format(cgi.escape('<ESC>+<Enter> : save and exit')),
-            '<b>{}</b>'.format(cgi.escape('<F1> : help'))
+            '<b>{}</b>'.format(html.escape('<ESC>+<Enter> : save and exit')),
+            '<b>{}</b>'.format(html.escape('<F1> : help'))
         ]
         if self._attributes.get('config', None):
-            data += ['<b>Configuration</b>: {}'.format(cgi.escape(self._attributes['config']))]
+            data += ['<b>Configuration</b>: {}'.format(html.escape(self._attributes['config']))]
         if self._attributes.get('bucket', None):
-            data += ['<b>Bucket</b>: {}'.format(cgi.escape(self._attributes['bucket']))]
+            data += ['<b>Bucket</b>: {}'.format(html.escape(self._attributes['bucket']))]
         if self._attributes.get('path', None):
-            data += ['<b>Path</b>: {}'.format(cgi.escape(self._attributes['path']))]
+            data += ['<b>Path</b>: {}'.format(html.escape(self._attributes['path']))]
         if self._attributes.get('debug', None):
-            data += ['<b>Debug</b>: {}'.format(cgi.escape(self._attributes['debug']))]
+            data += ['<b>Debug</b>: {}'.format(html.escape(self._attributes['debug']))]
         text = ' - '.join(data)
         return HTML(six.text_type(text))
 

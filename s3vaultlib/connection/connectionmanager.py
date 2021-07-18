@@ -9,7 +9,7 @@ from s3vaultlib.connection.defaults import DEFAULT_TOKEN_FILENAME
 from s3vaultlib.metadata.factory import MetadataFactory
 
 __author__ = "Giuseppe Chiesa"
-__copyright__ = "Copyright 2017, Giuseppe Chiesa"
+__copyright__ = "Copyright 2017-2021, Giuseppe Chiesa"
 __credits__ = ["Giuseppe Chiesa"]
 __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
