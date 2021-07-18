@@ -15,7 +15,7 @@ from s3vaultlib.connection.connectionmanager import ConnectionManager
 from s3vaultlib.s3vaultlib import S3Vault
 
 __author__ = "Giuseppe Chiesa"
-__copyright__ = "Copyright 2017, Giuseppe Chiesa"
+__copyright__ = "Copyright 2017-2021, Giuseppe Chiesa"
 __credits__ = ["Giuseppe Chiesa"]
 __license__ = "BSD"
 __maintainer__ = "Giuseppe Chiesa"
