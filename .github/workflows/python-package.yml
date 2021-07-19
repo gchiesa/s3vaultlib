@@ -20,15 +20,33 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install tox tox-gh-actions
         if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
+
     - name: Run tests with tox
       run: |
         tox
+
+    - name: Build package
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+
+    - name: Draft a release
+      uses: softprops/action-gh-release@b7e450da2a4b4cb4bfbae528f788167786cfcedf
+      with:
+#        body_path: # optional
+        draft: true
+        # Newline-delimited list of path globs for asset files to upload
+        files: |
+          dist/*
