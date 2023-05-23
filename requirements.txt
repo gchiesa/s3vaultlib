@@ -1,4 +1,4 @@
-requests==2.26.0
+requests==2.31.0
 boto3==1.18.1
 Jinja2==3.0.1
 pyboto3==1.13.18
