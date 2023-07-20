@@ -8,7 +8,7 @@ six==1.16.0
 python-string-utils==1.0.0
 dpath==2.0.1
 prompt-toolkit==2.0.9
-Pygments==2.9.0
+Pygments==2.15.0
 ruamel.yaml==0.17.10
 colorlog==5.0.1
 humanfriendly==9.2
